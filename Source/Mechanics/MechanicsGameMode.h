@@ -11,8 +11,8 @@ class AMechanicsGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
 
-public:
-	AMechanicsGameMode();
+// public:
+// 	AMechanicsGameMode();
 };
 
 

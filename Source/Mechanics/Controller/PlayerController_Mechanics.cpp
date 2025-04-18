@@ -65,7 +65,8 @@ void APlayerController_Mechanics::OnSetDestinationTriggered() {
 		CachedDestination = Hit.Location;
 	}
 	
-	if(APawn* ControlledPawn = GetPawn()) {
+	APawn* ControlledPawn = GetPawn();
+	if(ControlledPawn != nullptr) {
 		FVector WorldDirection = (CachedDestination - ControlledPawn->GetActorLocation()).GetSafeNormal();
 		ControlledPawn->AddMovementInput(WorldDirection, 1.0, false);
 	}
@@ -76,4 +77,6 @@ void APlayerController_Mechanics::OnSetDestinationReleased() {
         UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, CachedDestination);
         UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, FXCursor, CachedDestination, FRotator::ZeroRotator, FVector(1.0f, 1.0f, 1.0f), true, true, ENCPoolMethod::None, true);
     }
+
+	FollowTime = 0.f;
 }
