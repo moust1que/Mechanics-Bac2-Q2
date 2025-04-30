@@ -8,6 +8,8 @@
 
 APlayerController_Mechanics::APlayerController_Mechanics() {
     bShowMouseCursor = true;
+    bEnableClickEvents = true;
+    bEnableMouseOverEvents = true;
     DefaultMouseCursor = EMouseCursor::Default;
     CachedDestination = FVector::ZeroVector;
     FollowTime = 0.0f;

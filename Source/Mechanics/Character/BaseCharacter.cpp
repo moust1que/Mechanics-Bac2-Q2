@@ -18,6 +18,9 @@ ABaseCharacter::ABaseCharacter() {
     CameraComponent->SetupAttachment(SpringArmComponent, USpringArmComponent::SocketName);
     CameraComponent->FieldOfView = 60.0f;
     CameraComponent->bUsePawnControlRotation = false;
+
+    // Stats
+    Level = 1;
 }
 
 void ABaseCharacter::BeginPlay() {
@@ -28,6 +31,8 @@ void ABaseCharacter::BeginPlay() {
     for(const auto& AbilityPair : AbilityMap) {
         if(AbilityPair.Value) {
             UAbilityBase* InstantiatedAbility = NewObject<UAbilityBase>(this, AbilityPair.Value);
+            InstantiatedAbility->CurCharacter = this;
+            InstantiatedAbility->UpdateStats();
             InstantiatedAbilities.Add(AbilityPair.Key, InstantiatedAbility);
         }
     }
@@ -41,24 +46,24 @@ void ABaseCharacter::HandleFunctionCall(FName functionName, const FInputActionIn
 
 void ABaseCharacter::ActivateAbility(FName AbilitySlot) {
     if(UAbilityBase** Ability = InstantiatedAbilities.Find(AbilitySlot)) {
-        (*Ability)->ActivateAbility(this);
+        (*Ability)->ActivateAbility();
     }
 }
 
 void ABaseCharacter::Ability1() {
-    UE_LOG(LogTemp, Warning, TEXT("Ability1"));
+    ActivateAbility("A");
 }
 
 void ABaseCharacter::Ability2() {
-    UE_LOG(LogTemp, Warning, TEXT("Ability2"));
+    ActivateAbility("Z");
 }
 
 void ABaseCharacter::Ability3() {
-    UE_LOG(LogTemp, Warning, TEXT("Ability3"));
+    ActivateAbility("E");
 }
 
 void ABaseCharacter::Ability4() {    
-    UE_LOG(LogTemp, Warning, TEXT("Ability4"));
+    ActivateAbility("R");
 }
 
 void ABaseCharacter::ZoomCamera(const FInputActionInstance& Instance) {

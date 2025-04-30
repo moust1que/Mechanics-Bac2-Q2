@@ -29,6 +29,43 @@ class MECHANICS_API ABaseCharacter : public ACharacter {
         UPROPERTY(EditAnywhere, Category = Camera) float CameraZoomMin = 1200.0f;
         UPROPERTY(EditAnywhere, Category = Camera) float CameraZoomMax = 2500.0f;
 
+        // Stats
+        UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Stats) int Level;
+        UPROPERTY(EditAnywhere, Category = Stats) int MaxLevel = 18;
+        UPROPERTY(EditAnywhere, Category = Stats) float BaseHealth;
+        UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Stats) float Health;
+        UPROPERTY(EditAnywhere, Category = Stats) float HealthPerLevel;
+        UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Stats) float MaxHealth;
+        UPROPERTY(EditAnywhere, Category = Stats) float BaseRessource;
+        UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Stats) float Ressource;
+        UPROPERTY(EditAnywhere, Category = Stats) float RessourcePerLevel;
+        UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Stats) float MaxRessource;
+        UPROPERTY(EditAnywhere, Category = Stats) float BaseAbilityDamage;
+        UPROPERTY(EditAnywhere, Category = Stats) float AbilityDamage;
+        UPROPERTY(EditAnywhere, Category = Stats) float AbilityDamagePerLevel;
+        UPROPERTY(EditAnywhere, Category = Stats) float BaseAbilityPower;
+        UPROPERTY(EditAnywhere, Category = Stats) float AbilityPower;
+        UPROPERTY(EditAnywhere, Category = Stats) float AbilityPowerPerLevel;
+        UPROPERTY(EditAnywhere, Category = Stats) float BaseAttackSpeed;
+        UPROPERTY(EditAnywhere, Category = Stats) float AttackSpeed;
+        UPROPERTY(EditAnywhere, Category = Stats) float AttackSpeedRatio;
+        UPROPERTY(EditAnywhere, Category = Stats) float BasePhysicalResist;
+        UPROPERTY(EditAnywhere, Category = Stats) float PhysicalResist;
+        UPROPERTY(EditAnywhere, Category = Stats) float PhysicalResistPerLevel;
+        UPROPERTY(EditAnywhere, Category = Stats) float BaseMagicResist;
+        UPROPERTY(EditAnywhere, Category = Stats) float MagicResist;
+        UPROPERTY(EditAnywhere, Category = Stats) float MagicResistPerLevel;
+        UPROPERTY(EditAnywhere, Category = Stats) float MoveSpeed;
+        UPROPERTY(EditAnywhere, Category = Stats) float AttackRange;
+        UPROPERTY(EditAnywhere, Category = Stats) float BaseHealthRegen;
+        UPROPERTY(EditAnywhere, Category = Stats) float HealthRegen;
+        UPROPERTY(EditAnywhere, Category = Stats) float HealthRegenPerLevel;
+        UPROPERTY(EditAnywhere, Category = Stats) float BaseRessourceRegen;
+        UPROPERTY(EditAnywhere, Category = Stats) float RessourceRegen;
+        UPROPERTY(EditAnywhere, Category = Stats) float RessourceRegenPerLevel;
+
+        virtual void LevelUP() {};
+
     protected:
         // Called when the game starts or when spawned
         virtual void BeginPlay() override;
@@ -42,4 +79,6 @@ class MECHANICS_API ABaseCharacter : public ACharacter {
         UFUNCTION() void Ability3();
         UFUNCTION() void Ability4();
         UFUNCTION() void ZoomCamera(const FInputActionInstance& Instance);
+        
+        virtual void UpdateStats() {};
 };
