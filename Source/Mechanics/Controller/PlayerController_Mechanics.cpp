@@ -82,3 +82,30 @@ void APlayerController_Mechanics::OnSetDestinationReleased() {
 
 	FollowTime = 0.f;
 }
+
+ABaseCharacter* APlayerController_Mechanics::SetCharacter() {
+    ACharacter* CurCharacter = GetCharacter();
+    
+    FVector NewSpawnLocation = CurCharacter->GetActorLocation();
+    FRotator NewSpawnRotation = CurCharacter->GetActorRotation();
+
+    TSubclassOf<ACharacter> NewClass = nullptr;
+
+    if(CurCharacter->IsA(Characters[0])) {
+        NewClass = Characters[1];
+    }else if(CurCharacter->IsA(Characters[1])) {
+        NewClass = Characters[0];
+    }
+
+    CurCharacter->Destroy();
+
+    FActorSpawnParameters SpawnParams;
+    SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+    SpawnParams.Owner = this;
+    
+    ABaseCharacter* NewCharacter = GetWorld()->SpawnActor<ABaseCharacter>(NewClass, NewSpawnLocation, NewSpawnRotation, SpawnParams);
+    
+    Possess(NewCharacter);
+
+    return NewCharacter;
+}

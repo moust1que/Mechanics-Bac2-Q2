@@ -9,6 +9,7 @@ class UNiagaraSystem;
 class UInputMappingContext;
 class UInputAction;
 struct FInputActionInstance;
+class ABaseCharacter;
 
 UCLASS()
 class MECHANICS_API APlayerController_Mechanics : public APlayerController {
@@ -25,6 +26,10 @@ class MECHANICS_API APlayerController_Mechanics : public APlayerController {
         UPROPERTY(EditAnywhere, Category = Input) TMap<FName, FName> ActionFunctionMapping = {};
 
         UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input) UNiagaraSystem* FXCursor;
+
+        UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Characters) TArray<TSubclassOf<ABaseCharacter>> Characters;
+
+        UFUNCTION(BlueprintCallable) ABaseCharacter* SetCharacter();
 
     protected:
         virtual void BeginPlay() override;

@@ -1,11 +1,13 @@
 #include "Akali.h"
 
-AAkali::AAkali() {
+void AAkali::BeginPlay() {
+    Super::BeginPlay();
+
     Level = 1;
     BaseHealth = 600.0f;
     Health = BaseHealth;
     HealthPerLevel = 119.0f;
-    MaxRessource = 200.0f;
+    BaseRessource = 200.0f;
     Ressource = BaseRessource;
     RessourcePerLevel = 0.0f;
     BaseAbilityDamage = 62.0f;

@@ -4,6 +4,10 @@
 #include "../../AbilityBase.h"
 #include "ShurikenFlip.generated.h"
 
+// Forward declaration
+class ABaseCharacter;
+class AShurikenProjectile;
+
 UCLASS()
 class MECHANICS_API UShurikenFlip : public UAbilityBase {
 	GENERATED_BODY()
@@ -13,11 +17,21 @@ class MECHANICS_API UShurikenFlip : public UAbilityBase {
         UFUNCTION() void ActivateAbility() override;
         UFUNCTION() void UpdateStats() override;
 
+        UFUNCTION() void PerformRecast();
+        UFUNCTION() void CancelRecast();
+
+        UFUNCTION() void ResetCooldown();
+
+        UFUNCTION() void OnShurikenHit(AActor* HitActor, FVector HitLocation);
+
         UPROPERTY(EditAnywhere, Category = Ability) float TotBaseDamage;
-        UPROPERTY(EditAnywhere, Category = Ability) float BaseRecastCooldown = 3.0f;
-        UPROPERTY(EditAnywhere, Category = Ability) float BaseRecastRessourceCost = 0.0f;
-        UPROPERTY(EditAnywhere, Category = Ability) float RecastBaseDamage;
-        UPROPERTY(EditAnywhere, Category = Ability) float RecastAbilityDamage;
-        UPROPERTY(EditAnywhere, Category = Ability) float RecastAbilityPower;
-        UPROPERTY(EditAnywhere, Category = Ability) float RecastTotalDamage;
+        UPROPERTY(EditAnywhere, Category = Ability) float MarkTimer = 3.0f;
+
+        UPROPERTY(EditDefaultsOnly, Category = Ability) TSubclassOf<AShurikenProjectile> ShurikenProjectileClass;
+
+        UPROPERTY() FVector RecastLocation;
+
+        UPROPERTY() AActor* RecastTarget = nullptr;
+
+        FTimerHandle RecastWindowTimer;
 };
