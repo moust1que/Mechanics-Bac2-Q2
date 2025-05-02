@@ -15,7 +15,8 @@ class MECHANICS_API UShurikenFlip : public UAbilityBase {
     public:
         UShurikenFlip();
         UFUNCTION() void ActivateAbility() override;
-        UFUNCTION() void UpdateStats() override;
+        void UpdateStats() override;
+        UFUNCTION() void StartCooldown() override;
 
         UFUNCTION() void PerformRecast();
         UFUNCTION() void CancelRecast();

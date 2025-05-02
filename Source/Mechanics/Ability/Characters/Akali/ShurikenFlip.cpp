@@ -5,6 +5,7 @@
 
 UShurikenFlip::UShurikenFlip() {
     Level = 0;
+    AbilityID = 2;
     MaxLevel = 5;
     BaseCooldown = 16.0f;
     BaseRessourceCost = 30.0f;
@@ -26,6 +27,8 @@ void UShurikenFlip::UpdateStats() {
 }
 
 void UShurikenFlip::ActivateAbility() {
+    if(Level == 0) return;
+
     if(IsOnCooldown) return;
 
     if(CanRecast) {
@@ -45,8 +48,7 @@ void UShurikenFlip::ActivateAbility() {
         Projectile->OnShurikenHit.BindUObject(this, &UShurikenFlip::OnShurikenHit);
     }
 
-    IsOnCooldown = true;
-    CurCharacter->GetWorld()->GetTimerManager().SetTimer(CooldownTimer, this, &UShurikenFlip::ResetCooldown, Cooldown, false);
+    StartCooldown();
 }
 
 void UShurikenFlip::OnShurikenHit(AActor* HitActor, FVector HitLocation) {
@@ -77,4 +79,11 @@ void UShurikenFlip::CancelRecast() {
 void UShurikenFlip::ResetCooldown() {
     UE_LOG(LogTemp, Warning, TEXT("Reset Cooldown"));
     IsOnCooldown = false;
+}
+
+void UShurikenFlip::StartCooldown() {
+    IsOnCooldown = true;
+    CurCharacter->GetWorld()->GetTimerManager().SetTimer(CooldownTimer, this, &UShurikenFlip::ResetCooldown, Cooldown, false);
+
+    CurCharacter->HUDWidget->StartCooldown(this);
 }

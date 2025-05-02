@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "../Widget/MainHUD.h"
 #include "BaseCharacter.generated.h"
 
 // Forward declaration
@@ -17,17 +18,19 @@ class MECHANICS_API ABaseCharacter : public ACharacter {
     public:
         ABaseCharacter();
 
-        UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Abilities) TMap<FName, TSubclassOf<UAbilityBase>> AbilityMap; // "Q", "W", "E", "R"
+        UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Abilities) TMap<FName, TSubclassOf<UAbilityBase>> AbilityMap; // "A", "Z", "E", "R"
 
-        UPROPERTY() TMap<FName, UAbilityBase*> InstantiatedAbilities;
+        UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Abilities) TMap<FName, UAbilityBase*> InstantiatedAbilities;
 
         void HandleFunctionCall(FName functionName, const FInputActionInstance& Instance);
 
-        void ActivateAbility(FName AbilitySlot); // "Q", "W", etc.
+        void ActivateAbility(FName AbilitySlot); // "A", "Z", "E", etc.
 
         UPROPERTY(EditAnywhere, Category = Camera) float CameraZoomSpeed = 100.0f;
         UPROPERTY(EditAnywhere, Category = Camera) float CameraZoomMin = 1200.0f;
         UPROPERTY(EditAnywhere, Category = Camera) float CameraZoomMax = 2500.0f;
+
+        UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Widget) UMainHUD* HUDWidget; 
 
         // Stats
         UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Stats) int Level;

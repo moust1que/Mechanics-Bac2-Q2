@@ -15,10 +15,11 @@ class MECHANICS_API UAbilityBase : public UObject {
     public:
         UPROPERTY(EditAnywhere, Category = Ability) ABaseCharacter* CurCharacter;
 
-        UPROPERTY(EditAnywhere, Category = Ability) int Level;
+        UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Ability) int Level;
+        UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Ability) int AbilityID;
         UPROPERTY(EditAnywhere, Category = Ability) int MaxLevel;
         UPROPERTY(EditAnywhere, Category = Ability) float BaseCooldown;
-        UPROPERTY(EditAnywhere, Category = Ability) float Cooldown;
+        UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Ability) float Cooldown;
         UPROPERTY(EditAnywhere, Category = Ability) bool IsOnCooldown = false;
         UPROPERTY(EditAnywhere, Category = Ability) float BaseRessourceCost;
         UPROPERTY(EditAnywhere, Category = Ability) float RessourceCost;
@@ -38,5 +39,6 @@ class MECHANICS_API UAbilityBase : public UObject {
         FTimerHandle CooldownTimer;
 
         virtual void ActivateAbility() {};
-        virtual void UpdateStats() {};
+        UFUNCTION(BlueprintCallable) virtual void UpdateStats() {};
+        virtual void StartCooldown() {};
 };
