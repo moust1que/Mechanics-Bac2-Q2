@@ -36,9 +36,14 @@ class MECHANICS_API UAbilityBase : public UObject {
         UPROPERTY(EditAnywhere, Category = Ability) float RecastAbilityPower;
         UPROPERTY(EditAnywhere, Category = Ability) float RecastTotalDamage;
 
+        UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Arguments) float Arg1;
+        UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Arguments) float Arg2;
+        UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Arguments) float Arg3;
+
         FTimerHandle CooldownTimer;
 
         virtual void ActivateAbility() {};
         UFUNCTION(BlueprintCallable) virtual void UpdateStats() {};
         virtual void StartCooldown() {};
+        UFUNCTION(BlueprintCallable) virtual TArray<float> GetArguments() {return {Arg1, Arg2, Arg3};};
 };

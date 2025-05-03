@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "../../AbilityBase.h"
+#include "../../../Character/Characters/Akali.h"
 #include "ShurikenFlip.generated.h"
 
 // Forward declaration
@@ -17,6 +18,7 @@ class MECHANICS_API UShurikenFlip : public UAbilityBase {
         UFUNCTION() void ActivateAbility() override;
         void UpdateStats() override;
         UFUNCTION() void StartCooldown() override;
+        TArray<float> GetArguments() override;
 
         UFUNCTION() void PerformRecast();
         UFUNCTION() void CancelRecast();
@@ -35,4 +37,6 @@ class MECHANICS_API UShurikenFlip : public UAbilityBase {
         UPROPERTY() AActor* RecastTarget = nullptr;
 
         FTimerHandle RecastWindowTimer;
+
+        UPROPERTY() AAkali* AkaliCharacter = nullptr;
 };

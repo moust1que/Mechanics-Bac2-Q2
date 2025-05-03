@@ -4,6 +4,7 @@
 #include "InputMappingContext.h"
 #include "../Character/BaseCharacter.h"
 #include "Blueprint/AIBlueprintHelperLibrary.h"
+#include "../Widget/MainHUD.h"
 #include "NiagaraFunctionLibrary.h"
 
 APlayerController_Mechanics::APlayerController_Mechanics() {
@@ -53,10 +54,26 @@ void APlayerController_Mechanics::DynamicInputHandler(const FInputActionInstance
 }
 
 void APlayerController_Mechanics::OnInputStarted() {
+    WasCancellingAbility = false;
+
+    if(ABaseCharacter* character = Cast<ABaseCharacter>(GetPawn())) {
+        if(character->IsInAbilityTargeting()) {
+            character->CancelAttack();
+            WasCancellingAbility = true;
+            return;
+        }
+    }
+
     StopMovement();
 }
 
 void APlayerController_Mechanics::OnSetDestinationTriggered() {
+    if(WasCancellingAbility) return;
+    
+    if(ABaseCharacter* character = Cast<ABaseCharacter>(GetPawn())) {
+        if(character->IsInAbilityTargeting()) return;
+    }
+
     FollowTime += GetWorld()->GetDeltaSeconds();
 
     FHitResult Hit;
@@ -75,6 +92,15 @@ void APlayerController_Mechanics::OnSetDestinationTriggered() {
 }
 
 void APlayerController_Mechanics::OnSetDestinationReleased() {
+    if(WasCancellingAbility) {
+        WasCancellingAbility = false;
+        return;
+    }
+
+    if(ABaseCharacter* character = Cast<ABaseCharacter>(GetPawn())) {
+        if(character->IsInAbilityTargeting()) return;
+    }
+
     if(FollowTime <= ShortPressThreshold) {
         UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, CachedDestination);
         UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, FXCursor, CachedDestination, FRotator::ZeroRotator, FVector(1.0f, 1.0f, 1.0f), true, true, ENCPoolMethod::None, true);
@@ -85,6 +111,7 @@ void APlayerController_Mechanics::OnSetDestinationReleased() {
 
 ABaseCharacter* APlayerController_Mechanics::SetCharacter() {
     ACharacter* CurCharacter = GetCharacter();
+    ABaseCharacter* BaseCharacter = Cast<ABaseCharacter>(CurCharacter);
     
     FVector NewSpawnLocation = CurCharacter->GetActorLocation();
     FRotator NewSpawnRotation = CurCharacter->GetActorRotation();
@@ -97,6 +124,9 @@ ABaseCharacter* APlayerController_Mechanics::SetCharacter() {
         NewClass = Characters[0];
     }
 
+    
+    UMainHUD* MainHUD = Cast<UMainHUD>(BaseCharacter->HUDWidget);
+
     CurCharacter->Destroy();
 
     FActorSpawnParameters SpawnParams;
@@ -104,6 +134,8 @@ ABaseCharacter* APlayerController_Mechanics::SetCharacter() {
     SpawnParams.Owner = this;
     
     ABaseCharacter* NewCharacter = GetWorld()->SpawnActor<ABaseCharacter>(NewClass, NewSpawnLocation, NewSpawnRotation, SpawnParams);
+
+    NewCharacter->HUDWidget = MainHUD;
     
     Possess(NewCharacter);
 

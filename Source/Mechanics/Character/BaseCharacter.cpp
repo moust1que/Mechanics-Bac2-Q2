@@ -51,19 +51,19 @@ void ABaseCharacter::ActivateAbility(FName AbilitySlot) {
 }
 
 void ABaseCharacter::Ability1() {
-    ActivateAbility("A");
+    ActivateAttackMode(EAbilityInputID::A);
 }
 
 void ABaseCharacter::Ability2() {
-    ActivateAbility("Z");
+    ActivateAttackMode(EAbilityInputID::Z);
 }
 
 void ABaseCharacter::Ability3() {
-    ActivateAbility("E");
+    ActivateAttackMode(EAbilityInputID::E);
 }
 
 void ABaseCharacter::Ability4() {    
-    ActivateAbility("R");
+    ActivateAttackMode(EAbilityInputID::R);
 }
 
 void ABaseCharacter::ZoomCamera(const FInputActionInstance& Instance) {
@@ -75,4 +75,61 @@ void ABaseCharacter::ZoomCamera(const FInputActionInstance& Instance) {
     newLength = FMath::Clamp(newLength, CameraZoomMin, CameraZoomMax);
 
     SpringArmComponent->TargetArmLength = newLength;
+}
+
+void ABaseCharacter::ConfirmAttack() {
+    if(ActiveAbilityInputID == EAbilityInputID::None) return;
+
+    ExecuteAbility(ActiveAbilityInputID);
+
+    ActiveAbilityInputID = EAbilityInputID::None;
+    OnAbilityOverlayHideRequested();
+}
+
+void ABaseCharacter::CancelAttack() {
+    if(ActiveAbilityInputID == EAbilityInputID::None) return;
+
+    ActiveAbilityInputID = EAbilityInputID::None;
+    OnAbilityOverlayHideRequested();
+}
+
+void ABaseCharacter::ActivateAttackMode(EAbilityInputID Ability) {
+    if(ActiveAbilityInputID != EAbilityInputID::None) {
+        CancelAttack();
+    }
+
+    ActiveAbilityInputID = Ability;
+
+    OnAbilityOverlayRequested(Ability);
+}
+
+void ABaseCharacter::OnAbilityOverlayRequested(EAbilityInputID Ability) {
+
+}
+
+void ABaseCharacter::OnAbilityOverlayHideRequested() {
+
+}
+
+void ABaseCharacter::ExecuteAbility(EAbilityInputID Ability) {
+    switch(Ability) {
+        case EAbilityInputID::A:
+            ActivateAbility("A");
+            break;
+        case EAbilityInputID::Z:
+            ActivateAbility("Z");
+            break;
+        case EAbilityInputID::E:
+            ActivateAbility("E");
+            break;
+        case EAbilityInputID::R:
+            ActivateAbility("R");
+            break;
+        default:
+            break;
+    }
+}
+
+bool ABaseCharacter::IsInAbilityTargeting() const {
+    return ActiveAbilityInputID != EAbilityInputID::None;
 }

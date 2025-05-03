@@ -1,6 +1,5 @@
 #include "ShurikenFlip.h"
 #include "../../../Character/BaseCharacter.h"
-#include "../../../Character/Characters/Akali.h"
 #include "ShurikenProjectile.h"
 
 UShurikenFlip::UShurikenFlip() {
@@ -12,18 +11,23 @@ UShurikenFlip::UShurikenFlip() {
 }
 
 void UShurikenFlip::UpdateStats() {
-    TotBaseDamage = 70.0f * Level;
+    AkaliCharacter = Cast<AAkali>(CurCharacter);
+    
+    TotBaseDamage = Level == 0 ? 70.0f : 70.0f * Level;
     Cooldown = BaseCooldown - 1.5f * (Level - 1);
     RessourceCost = BaseRessourceCost;
     BaseDamage = TotBaseDamage * 0.3f;
-    AbilityDamage = CurCharacter->AbilityDamage * 0.3f;
-    AbilityPower = CurCharacter->AbilityPower * 0.33f;
+    AbilityDamage = AkaliCharacter->AbilityDamage * 0.3f;
+    AbilityPower = AkaliCharacter->AbilityPower * 0.33f;
     TotalDamage = BaseDamage + AbilityDamage + AbilityPower;
     
     RecastBaseDamage = TotBaseDamage * 0.7f;
-    RecastAbilityDamage = CurCharacter->AbilityDamage * 0.7f;
-    RecastAbilityPower = CurCharacter->AbilityPower * 0.77f;
+    RecastAbilityDamage = AkaliCharacter->AbilityDamage * 0.7f;
+    RecastAbilityPower = AkaliCharacter->AbilityPower * 0.77f;
     RecastTotalDamage = RecastBaseDamage + RecastAbilityDamage + RecastAbilityPower;
+
+    Arg1 = TotalDamage;
+    Arg2 = RecastTotalDamage;
 }
 
 void UShurikenFlip::ActivateAbility() {
@@ -77,7 +81,6 @@ void UShurikenFlip::CancelRecast() {
 }
 
 void UShurikenFlip::ResetCooldown() {
-    UE_LOG(LogTemp, Warning, TEXT("Reset Cooldown"));
     IsOnCooldown = false;
 }
 
@@ -86,4 +89,9 @@ void UShurikenFlip::StartCooldown() {
     CurCharacter->GetWorld()->GetTimerManager().SetTimer(CooldownTimer, this, &UShurikenFlip::ResetCooldown, Cooldown, false);
 
     CurCharacter->HUDWidget->StartCooldown(this);
+}
+
+TArray<float> UShurikenFlip::GetArguments() {
+    UpdateStats();
+    return { Arg1, Arg2, Arg3 };
 }

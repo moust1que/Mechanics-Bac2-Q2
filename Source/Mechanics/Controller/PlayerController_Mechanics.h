@@ -45,5 +45,7 @@ class MECHANICS_API APlayerController_Mechanics : public APlayerController {
         float ShortPressThreshold = 0.3f;
         float FollowTime;
 
+        bool WasCancellingAbility = false;
+
         void DynamicInputHandler(const FInputActionInstance& Instance);
 };

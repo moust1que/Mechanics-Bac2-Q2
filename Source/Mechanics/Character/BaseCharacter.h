@@ -11,6 +11,10 @@ struct FInputActionInstance;
 class USpringArmComponent;
 class UCameraComponent;
 
+UENUM(BlueprintType) enum class EAbilityInputID : uint8 {
+    None, A, Z, E, R
+};
+
 UCLASS()
 class MECHANICS_API ABaseCharacter : public ACharacter {
 	GENERATED_BODY()
@@ -69,6 +73,9 @@ class MECHANICS_API ABaseCharacter : public ACharacter {
 
         virtual void LevelUP() {};
 
+        UFUNCTION() void CancelAttack();
+        UFUNCTION() bool IsInAbilityTargeting() const;
+
     protected:
         // Called when the game starts or when spawned
         virtual void BeginPlay() override;
@@ -77,11 +84,18 @@ class MECHANICS_API ABaseCharacter : public ACharacter {
         USpringArmComponent* SpringArmComponent;
         UCameraComponent* CameraComponent;
 
+        EAbilityInputID ActiveAbilityInputID = EAbilityInputID::None;
+
         UFUNCTION() void Ability1();
         UFUNCTION() void Ability2();
         UFUNCTION() void Ability3();
         UFUNCTION() void Ability4();
         UFUNCTION() void ZoomCamera(const FInputActionInstance& Instance);
+        UFUNCTION() void ConfirmAttack();
+        UFUNCTION() void ActivateAttackMode(EAbilityInputID Ability);
+        UFUNCTION() void OnAbilityOverlayRequested(EAbilityInputID Ability);
+        UFUNCTION() void ExecuteAbility(EAbilityInputID Ability);
+        UFUNCTION() void OnAbilityOverlayHideRequested();
         
         virtual void UpdateStats() {};
 };
