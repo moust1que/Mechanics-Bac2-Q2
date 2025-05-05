@@ -10,9 +10,18 @@ class UAbilityBase;
 struct FInputActionInstance;
 class USpringArmComponent;
 class UCameraComponent;
+class UNiagaraSystem;
+class AAbilityTargetingIndicator;
 
 UENUM(BlueprintType) enum class EAbilityInputID : uint8 {
     None, A, Z, E, R
+};
+
+USTRUCT(BlueprintType) struct FAbiliyIndicatorSet {
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere) TSubclassOf<AActor> FirstCastIndicator;
+    UPROPERTY(EditAnywhere) TSubclassOf<AActor> SecondCastIndicator;
 };
 
 UCLASS()
@@ -25,6 +34,8 @@ class MECHANICS_API ABaseCharacter : public ACharacter {
         UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Abilities) TMap<FName, TSubclassOf<UAbilityBase>> AbilityMap; // "A", "Z", "E", "R"
 
         UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Abilities) TMap<FName, UAbilityBase*> InstantiatedAbilities;
+
+        UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input) UNiagaraSystem* FXCursor;
 
         void HandleFunctionCall(FName functionName, const FInputActionInstance& Instance);
 
@@ -71,13 +82,16 @@ class MECHANICS_API ABaseCharacter : public ACharacter {
         UPROPERTY(EditAnywhere, Category = Stats) float RessourceRegen;
         UPROPERTY(EditAnywhere, Category = Stats) float RessourceRegenPerLevel;
 
+        UPROPERTY(EditAnywhere, Category = Indicators) TMap<EAbilityInputID, FAbiliyIndicatorSet> AbilityIndicators;
+
+        UPROPERTY() AAbilityTargetingIndicator* CurrentTargetIndicator = nullptr;
+
         virtual void LevelUP() {};
 
         UFUNCTION() void CancelAttack();
         UFUNCTION() bool IsInAbilityTargeting() const;
 
     protected:
-        // Called when the game starts or when spawned
         virtual void BeginPlay() override;
 
     private:
@@ -86,6 +100,16 @@ class MECHANICS_API ABaseCharacter : public ACharacter {
 
         EAbilityInputID ActiveAbilityInputID = EAbilityInputID::None;
 
+        FVector CachedDestination;
+
+        bool WasCancellingAbility = false;
+
+        float ShortPressThreshold = 0.3f;
+        float FollowTime;
+
+        UFUNCTION() void OnSetDestinationStarted();
+        UFUNCTION() void OnSetDestinationTriggered();
+        UFUNCTION() void OnSetDestinationReleased();
         UFUNCTION() void Ability1();
         UFUNCTION() void Ability2();
         UFUNCTION() void Ability3();

@@ -6,18 +6,46 @@
 #include "Blueprint/AIBlueprintHelperLibrary.h"
 #include "../Widget/MainHUD.h"
 #include "NiagaraFunctionLibrary.h"
+#include "../Ability/AbilityTargetingIndicator.h"
 
 APlayerController_Mechanics::APlayerController_Mechanics() {
     bShowMouseCursor = true;
     bEnableClickEvents = true;
     bEnableMouseOverEvents = true;
     DefaultMouseCursor = EMouseCursor::Default;
-    CachedDestination = FVector::ZeroVector;
-    FollowTime = 0.0f;
 }
 
-void APlayerController_Mechanics::BeginPlay() {
-    Super::BeginPlay();
+void APlayerController_Mechanics::Tick(float DeltaTime) {
+    Super::Tick(DeltaTime);
+
+    ABaseCharacter* CurCharacter = Cast<ABaseCharacter>(GetPawn());
+    if(!CurCharacter) return;
+
+    AAbilityTargetingIndicator* CurrentTargetIndicator = CurCharacter->CurrentTargetIndicator;
+    if(!CurrentTargetIndicator) return;
+
+    if(CurCharacter->IsInAbilityTargeting()) {
+        FVector2D MousePosition;
+        if(GetMousePosition(MousePosition.X, MousePosition.Y)) {
+            FVector WorldOrigin, WorldDirection;
+            DeprojectScreenPositionToWorld(MousePosition.X, MousePosition.Y, WorldOrigin, WorldDirection);
+            
+            FVector Start = WorldOrigin;
+            FVector End = Start + WorldDirection * 10000.0f;
+
+            FHitResult Hit;
+            FCollisionQueryParams Params;
+            Params.AddIgnoredActor(this);
+            
+            if(GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params)) {
+                FVector IndicatorCenter = CurrentTargetIndicator->GetActorLocation();
+                FVector Direction = Hit.ImpactPoint - IndicatorCenter;
+                Direction.Z = 0.0f;
+
+                CurrentTargetIndicator->UpdateIndicatorDirection(Direction);
+            }
+        }
+    }
 }
 
 void APlayerController_Mechanics::SetupInputComponent() {
@@ -29,84 +57,68 @@ void APlayerController_Mechanics::SetupInputComponent() {
 
     if(UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent)) {
         for(UInputAction* action : InputActions) {
-            if(action) {
-                EnhancedInputComponent->BindAction(action, ETriggerEvent::Triggered, this, &APlayerController_Mechanics::DynamicInputHandler);
-            }
-        }
+            if(!action) continue;
 
-        EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Started, this, &APlayerController_Mechanics::OnInputStarted);
-		EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Triggered, this, &APlayerController_Mechanics::OnSetDestinationTriggered);
-		EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Completed, this, &APlayerController_Mechanics::OnSetDestinationReleased);
-		EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Canceled, this, &APlayerController_Mechanics::OnSetDestinationReleased);
-    }
-}
-
-void APlayerController_Mechanics::DynamicInputHandler(const FInputActionInstance& Instance) {
-    FName actionName = Instance.GetSourceAction()->GetFName();
-
-    if(ActionFunctionMapping.Contains(actionName)) {
-        FName functionName = ActionFunctionMapping[actionName];
-
-        if(ABaseCharacter* character = Cast<ABaseCharacter>(GetPawn())){
-            character->HandleFunctionCall(functionName, Instance);
+            EnhancedInputComponent->BindAction(action, ETriggerEvent::Started, this, &APlayerController_Mechanics::OnActionStarted);
+            EnhancedInputComponent->BindAction(action, ETriggerEvent::Triggered, this, &APlayerController_Mechanics::OnActionTriggered);
+            EnhancedInputComponent->BindAction(action, ETriggerEvent::Completed, this, &APlayerController_Mechanics::OnActionCompleted);
+            EnhancedInputComponent->BindAction(action, ETriggerEvent::Canceled, this, &APlayerController_Mechanics::OnActionCanceled);
+            EnhancedInputComponent->BindAction(action, ETriggerEvent::Ongoing, this, &APlayerController_Mechanics::OnActionGoing);
         }
     }
 }
 
-void APlayerController_Mechanics::OnInputStarted() {
-    WasCancellingAbility = false;
+void APlayerController_Mechanics::OnActionStarted(const FInputActionInstance& Instance) {
+    const UInputAction* Action = Instance.GetSourceAction();
+    if(!Action || !FunctionBindings.Contains(Action)) return;
 
-    if(ABaseCharacter* character = Cast<ABaseCharacter>(GetPawn())) {
-        if(character->IsInAbilityTargeting()) {
-            character->CancelAttack();
-            WasCancellingAbility = true;
-            return;
-        }
-    }
+    FName FunctionToCall = FunctionBindings[Action].OnStarted;
 
-    StopMovement();
+    DynamicInputHandler(FunctionToCall, Instance);
 }
 
-void APlayerController_Mechanics::OnSetDestinationTriggered() {
-    if(WasCancellingAbility) return;
-    
-    if(ABaseCharacter* character = Cast<ABaseCharacter>(GetPawn())) {
-        if(character->IsInAbilityTargeting()) return;
-    }
+void APlayerController_Mechanics::OnActionTriggered(const FInputActionInstance& Instance) {
+    const UInputAction* Action = Instance.GetSourceAction();
+    if(!Action || !FunctionBindings.Contains(Action)) return;
 
-    FollowTime += GetWorld()->GetDeltaSeconds();
+    FName FunctionToCall = FunctionBindings[Action].OnTriggered;
 
-    FHitResult Hit;
-    bool bHitSuccessful = false;
-    bHitSuccessful = GetHitResultUnderCursor(ECollisionChannel::ECC_Visibility, true, Hit);
-
-    if(bHitSuccessful) {
-		CachedDestination = Hit.Location;
-	}
-	
-	APawn* ControlledPawn = GetPawn();
-	if(ControlledPawn != nullptr) {
-		FVector WorldDirection = (CachedDestination - ControlledPawn->GetActorLocation()).GetSafeNormal();
-		ControlledPawn->AddMovementInput(WorldDirection, 1.0, false);
-	}
+    DynamicInputHandler(FunctionToCall, Instance);
 }
 
-void APlayerController_Mechanics::OnSetDestinationReleased() {
-    if(WasCancellingAbility) {
-        WasCancellingAbility = false;
-        return;
-    }
+void APlayerController_Mechanics::OnActionCompleted(const FInputActionInstance& Instance) {
+    const UInputAction* Action = Instance.GetSourceAction();
+    if(!Action || !FunctionBindings.Contains(Action)) return;
+
+    FName FunctionToCall = FunctionBindings[Action].OnCompleted;
+
+    DynamicInputHandler(FunctionToCall, Instance);
+}
+
+void APlayerController_Mechanics::OnActionCanceled(const FInputActionInstance& Instance) {
+    const UInputAction* Action = Instance.GetSourceAction();
+    if(!Action || !FunctionBindings.Contains(Action)) return;
+
+    FName FunctionToCall = FunctionBindings[Action].OnCanceled;
+
+    DynamicInputHandler(FunctionToCall, Instance);
+}
+
+void APlayerController_Mechanics::OnActionGoing(const FInputActionInstance& Instance) {
+    const UInputAction* Action = Instance.GetSourceAction();
+    if(!Action || !FunctionBindings.Contains(Action)) return;
+
+    FName FunctionToCall = FunctionBindings[Action].OnGoing;
+
+    DynamicInputHandler(FunctionToCall, Instance);
+}
+
+void APlayerController_Mechanics::DynamicInputHandler(FName FunctionName, const FInputActionInstance& Instance) {
+    if(FunctionName.IsNone()) return;
 
     if(ABaseCharacter* character = Cast<ABaseCharacter>(GetPawn())) {
-        if(character->IsInAbilityTargeting()) return;
+        character->HandleFunctionCall(FunctionName, Instance);
     }
-
-    if(FollowTime <= ShortPressThreshold) {
-        UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, CachedDestination);
-        UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, FXCursor, CachedDestination, FRotator::ZeroRotator, FVector(1.0f, 1.0f, 1.0f), true, true, ENCPoolMethod::None, true);
-    }
-
-	FollowTime = 0.f;
 }
 
 ABaseCharacter* APlayerController_Mechanics::SetCharacter() {

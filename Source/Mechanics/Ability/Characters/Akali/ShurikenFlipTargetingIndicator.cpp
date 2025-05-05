@@ -23,14 +23,6 @@ AShurikenFlipTargetingIndicator::AShurikenFlipTargetingIndicator() {
     FrontArrowTipMesh->SetupAttachment(RootComponent);
 }
 
-// void AShurikenFlipTargetingIndicator::BeginPlay() {
-// 	Super::BeginPlay();
-// }
-
-// void AShurikenFlipTargetingIndicator::Tick(float DeltaTime) {
-// 	Super::Tick(DeltaTime);
-// }
-
 void AShurikenFlipTargetingIndicator::UpdateIndicatorDirection(const FVector& Direction) {
     FVector Forward = Direction.GetSafeNormal();
 
@@ -48,7 +40,7 @@ void AShurikenFlipTargetingIndicator::UpdateIndicatorDirection(const FVector& Di
 
 void AShurikenFlipTargetingIndicator::SetAttackRange(float Range) {
     AttackRange = Range;
-    RangeDecal->DecalSize = FVector(Range, Range, 1.0f);
+    RangeDecal->DecalSize = FVector(1.0f, Range, Range);
 }
 
 void AShurikenFlipTargetingIndicator::ShowIndicator(bool Show) {
