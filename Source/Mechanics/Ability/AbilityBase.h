@@ -45,5 +45,8 @@ class MECHANICS_API UAbilityBase : public UObject {
         virtual void ActivateAbility() {};
         UFUNCTION(BlueprintCallable) virtual void UpdateStats() {};
         virtual void StartCooldown() {};
+        UFUNCTION(BlueprintCallable, Category = Ability) virtual void ResetCooldown() {};
         UFUNCTION(BlueprintCallable) virtual TArray<float> GetArguments() {return {Arg1, Arg2, Arg3};};
+        virtual void StartCastTimer(float CastDuration, FName FunctionName) {};
+        virtual void LaunchAttack() {};
 };

@@ -2,9 +2,10 @@
 #include "Components/DecalComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "../../../Character/BaseCharacter.h"
 
 AShurikenFlipIndicator::AShurikenFlipIndicator() {
-    PrimaryActorTick.bCanEverTick = false;
+    PrimaryActorTick.bCanEverTick = true;
 
     RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
 
@@ -34,12 +35,16 @@ void AShurikenFlipIndicator::UpdateIndicatorDirection(const FVector& Direction) 
 
     FRotator RotationOffset(0.0f, 90.0f, 0.0f);
 
-    FVector BaseLocation = Forward * (AttackRange * 0.5f);
-    FVector TipLocation = Forward * AttackRange;
+    float RecenterBaseOffset = 41.0f;
+    FVector BaseOffset = Forward * RecenterBaseOffset;
+    float RecenterTipOffset = 75.0f;
+    FVector TipOffset = Forward * RecenterTipOffset;
+
+    FVector BaseLocation = Forward * (AttackRange * 0.5f) - BaseOffset;
+    FVector TipLocation = Forward * AttackRange - TipOffset;
 
     float Distance = FVector::Dist(BaseLocation, TipLocation);
 
-    // FrontArrowMesh->SetRelativeScale3D(FVector(1.2f, 8.25f, 1.0f));
     FrontArrowMesh->SetRelativeScale3D(FVector(1.2f, 6.57f, 1.0f));
     FrontArrowMesh->SetRelativeRotation(LookAtRotation + RotationOffset);
     FrontArrowMesh->SetRelativeLocation(BaseLocation);
@@ -55,5 +60,5 @@ void AShurikenFlipIndicator::UpdateIndicatorDirection(const FVector& Direction) 
 
 void AShurikenFlipIndicator::SetAttackRange(float Range) {
     AttackRange = Range;
-    RangeDecal->SetRelativeScale3D(FVector(1.0f, AttackRange, AttackRange));
+    RangeDecal->SetRelativeScale3D(FVector(10.0f, AttackRange, AttackRange));
 }

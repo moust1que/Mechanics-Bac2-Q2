@@ -13,13 +13,10 @@ class MECHANICS_API UPerfectExecution : public UAbilityBase {
         UPerfectExecution();
         UFUNCTION() void ActivateAbility() override;
         void UpdateStats() override;
-        UFUNCTION() void StartCooldown() override;
         TArray<float> GetArguments() override;
 
         UFUNCTION() void PerformRecast();
         UFUNCTION() void CancelRecast();
-
-        UFUNCTION() void ResetCooldown();
 
         UPROPERTY(EditAnywhere, Category = Ability) float MinBaseDamage;
         UPROPERTY(EditAnywhere, Category = Ability) float MaxBaseDamage;

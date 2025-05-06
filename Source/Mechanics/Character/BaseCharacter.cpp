@@ -6,6 +6,7 @@
 #include "Blueprint/AIBlueprintHelperLibrary.h"
 #include "NiagaraFunctionLibrary.h"
 #include "../Ability/AbilityTargetingIndicator.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 ABaseCharacter::ABaseCharacter() {
     SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
@@ -22,6 +23,10 @@ ABaseCharacter::ABaseCharacter() {
     CameraComponent->FieldOfView = 60.0f;
     CameraComponent->bUsePawnControlRotation = false;
 
+    GetMesh()->SetConstraintMode(EDOFMode::SixDOF);
+    GetMesh()->BodyInstance.bLockXRotation = true;
+    GetMesh()->BodyInstance.bLockYRotation = true;
+
     Level = 1;
 
     CachedDestination = FVector::ZeroVector;
@@ -30,6 +35,10 @@ ABaseCharacter::ABaseCharacter() {
 
 void ABaseCharacter::BeginPlay() {
 	Super::BeginPlay();
+
+    bUseControllerRotationYaw = false;
+    bUseControllerRotationPitch = false;
+    bUseControllerRotationRoll = false;
 
     SpringArmComponent->SetRelativeRotation(FRotator(-45.0f, 0.f, 0.f));
 
@@ -40,6 +49,25 @@ void ABaseCharacter::BeginPlay() {
             InstantiatedAbility->UpdateStats();
             InstantiatedAbilities.Add(AbilityPair.Key, InstantiatedAbility);
         }
+    }
+}
+
+void ABaseCharacter::Tick(float DeltaTime) {
+    Super::Tick(DeltaTime);
+
+    if(ShouldRotate) {
+        FRotator CurrentRotation = GetActorRotation();
+        FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaTime, RotationSpeed);
+        SetActorRotation(NewRotation);
+
+        if(NewRotation.Equals(TargetRotation, 1.0f)) {
+            ShouldRotate = false;
+        }
+    }
+
+    if(CurrentTargetIndicator) {
+        CurrentTargetIndicator->SetActorLocation(FVector(GetActorLocation().X, GetActorLocation().Y, 0.0f));
+        CurrentTargetIndicator->SetActorRotation(FRotator(0.0f, 0.0f, 0.0f));
     }
 }
 
@@ -74,9 +102,14 @@ void ABaseCharacter::OnSetDestinationTriggered() {
 
     if(bHitSuccessful) {
         CachedDestination = Hit.Location;
+        CachedDestination.Z = GetActorLocation().Z;
     }
 
     FVector WorldDirection = (CachedDestination - GetActorLocation()).GetSafeNormal();
+
+    TargetRotation = WorldDirection.Rotation();
+    ShouldRotate = true;
+
     AddMovementInput(WorldDirection, 1.0, false);
 }
 
@@ -134,6 +167,9 @@ void ABaseCharacter::ZoomCamera(const FInputActionInstance& Instance) {
 void ABaseCharacter::ConfirmAttack() {
     if(ActiveAbilityInputID == EAbilityInputID::None) return;
 
+    APlayerController* PlayerController = Cast<APlayerController>(GetController());
+    PlayerController->StopMovement();
+
     ExecuteAbility(ActiveAbilityInputID);
 
     ActiveAbilityInputID = EAbilityInputID::None;
@@ -144,12 +180,20 @@ void ABaseCharacter::CancelAttack() {
     if(ActiveAbilityInputID == EAbilityInputID::None) return;
 
     ActiveAbilityInputID = EAbilityInputID::None;
-    // OnAbilityOverlayHideRequested();
+    OnAbilityOverlayHideRequested();
 }
 
 void ABaseCharacter::ActivateAttackMode(EAbilityInputID Ability) {
     if(ActiveAbilityInputID != EAbilityInputID::None) {
         CancelAttack();
+    }
+
+    FString AbilityName = UEnum::GetValueAsString(Ability);
+    AbilityName = AbilityName.RightChop(AbilityName.Find(TEXT("::")) + 2);
+    if(UAbilityBase** FoundAbility = InstantiatedAbilities.Find(*AbilityName)) {
+        if(*FoundAbility && (*FoundAbility)->IsOnCooldown) {
+            return;
+        }
     }
 
     ActiveAbilityInputID = Ability;
@@ -163,14 +207,17 @@ void ABaseCharacter::OnAbilityOverlayRequested(EAbilityInputID Ability) {
     if(const FAbiliyIndicatorSet* IndicatorSet = AbilityIndicators.Find(Ability)) {
         TSubclassOf<AAbilityTargetingIndicator> IndicatorToSpawn = nullptr;
 
-        if(UAbilityBase** FoundAbility = InstantiatedAbilities.Find(FName(*UEnum::GetValueAsString(Ability)))) {
-            if(*FoundAbility && (*FoundAbility)->CanRecast) {
+        FString AbilityName = UEnum::GetValueAsString(Ability);
+        AbilityName = AbilityName.RightChop(AbilityName.Find(TEXT("::")) + 2);
+
+        if(UAbilityBase** FoundAbility = InstantiatedAbilities.Find(*AbilityName)) {
+            if(!*FoundAbility || (*FoundAbility)->Level == 0) return;
+
+            if((*FoundAbility)->CanRecast) {
                 IndicatorToSpawn = IndicatorSet->SecondCastIndicator;
             }else {
                 IndicatorToSpawn = IndicatorSet->FirstCastIndicator;
             }
-        }else {
-            IndicatorToSpawn = IndicatorSet->FirstCastIndicator;
         }
 
         if(IndicatorToSpawn) {
@@ -182,8 +229,8 @@ void ABaseCharacter::OnAbilityOverlayRequested(EAbilityInputID Ability) {
             FRotator SpawnRotation = GetActorRotation();
 
             CurrentTargetIndicator = GetWorld()->SpawnActor<AAbilityTargetingIndicator>(IndicatorToSpawn, SpawnLocation, SpawnRotation, SpawnParameters);
-
-            UE_LOG(LogTemp, Warning, TEXT("SpawnLocation: %s"), *SpawnLocation.ToString());
+        }else {
+            ConfirmAttack();
         }
     }
 }
@@ -196,6 +243,16 @@ void ABaseCharacter::OnAbilityOverlayHideRequested() {
 }
 
 void ABaseCharacter::ExecuteAbility(EAbilityInputID Ability) {
+    APlayerController* PlayerController = Cast<APlayerController>(GetController());
+    FHitResult Hit;
+
+    if(PlayerController->GetHitResultUnderCursor(ECC_Visibility, true, Hit)) {
+        FVector TargetLocation = Hit.Location;
+        FVector Direction = (TargetLocation - GetActorLocation()).GetSafeNormal();
+        TargetRotation = Direction.Rotation();
+        ShouldRotate = true;
+    }
+
     switch(Ability) {
         case EAbilityInputID::A:
             ActivateAbility("A");

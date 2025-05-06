@@ -6,12 +6,10 @@
 #include "PlayerController_Mechanics.generated.h"
 
 // Forward declaration
-// class UNiagaraSystem;
 class UInputMappingContext;
 class UInputAction;
 struct FInputActionInstance;
 class ABaseCharacter;
-// struct InputTriggers;
 
 USTRUCT(BlueprintType) struct FInputFunctionBinding {
     GENERATED_BODY()

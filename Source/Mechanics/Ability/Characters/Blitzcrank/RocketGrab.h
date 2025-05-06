@@ -14,10 +14,7 @@ class MECHANICS_API URocketGrab : public UAbilityBase {
 
         UFUNCTION() void ActivateAbility() override;
         void UpdateStats() override;
-        UFUNCTION() void StartCooldown() override;
         TArray<float> GetArguments() override;
-
-        UFUNCTION() void ResetCooldown();
 
         UPROPERTY() ABlitzcrank* BlitzcrankCharacter = nullptr;
 };

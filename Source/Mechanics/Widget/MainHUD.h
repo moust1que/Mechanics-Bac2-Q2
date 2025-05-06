@@ -11,4 +11,5 @@ class MECHANICS_API UMainHUD : public UUserWidget {
 
     public:
         UFUNCTION(BlueprintImplementableEvent) void StartCooldown(UAbilityBase* Ability);
+        UFUNCTION(BlueprintImplementableEvent) void ResetCooldown(UAbilityBase* Ability);
 };

@@ -17,15 +17,17 @@ class MECHANICS_API UShurikenFlip : public UAbilityBase {
         UShurikenFlip();
         UFUNCTION() void ActivateAbility() override;
         void UpdateStats() override;
-        UFUNCTION() void StartCooldown() override;
         TArray<float> GetArguments() override;
+        UFUNCTION() void StartCastTimer(float CastDuration, FName FunctionName) override;
+        UFUNCTION() void LaunchAttack() override;
+        UFUNCTION() void StartCooldown() override;
+        void ResetCooldown() override;
 
         UFUNCTION() void PerformRecast();
         UFUNCTION() void CancelRecast();
 
-        UFUNCTION() void ResetCooldown();
-
         UFUNCTION() void OnShurikenHit(AActor* HitActor, FVector HitLocation);
+        UFUNCTION() void OnShurikenMiss();
 
         UPROPERTY(EditAnywhere, Category = Ability) float TotBaseDamage;
         UPROPERTY(EditAnywhere, Category = Ability) float MarkTimer = 3.0f;
@@ -39,4 +41,22 @@ class MECHANICS_API UShurikenFlip : public UAbilityBase {
         FTimerHandle RecastWindowTimer;
 
         UPROPERTY() AAkali* AkaliCharacter = nullptr;
+
+    private:
+        FTimerHandle DashTimerHandle;
+        FVector DashStartLocation;
+        FVector DashTargetLocation;
+        float DashDuration;
+        float DashElapsedTime;
+
+        FTimerHandle RecastDashTimerHandle;
+        FVector RecastDashStartLocation;
+        FVector RecastDashTargetLocation;
+        float RecastDashDuration;
+        float RecastDashElapsedTime;
+
+        bool CanLaunchAttack = true;
+
+        UFUNCTION() void HandleDashTick();
+        UFUNCTION() void HandleRecastDashTick();
 };

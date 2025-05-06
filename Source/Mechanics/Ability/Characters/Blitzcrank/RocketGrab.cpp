@@ -29,17 +29,6 @@ void URocketGrab::ActivateAbility() {
     StartCooldown();
 }
 
-void URocketGrab::ResetCooldown() {
-    IsOnCooldown = false;
-}
-
-void URocketGrab::StartCooldown() {
-    IsOnCooldown = true;
-    CurCharacter->GetWorld()->GetTimerManager().SetTimer(CooldownTimer, this, &URocketGrab::ResetCooldown, Cooldown, false);
-
-    CurCharacter->HUDWidget->StartCooldown(this);
-}
-
 TArray<float> URocketGrab::GetArguments() {
     UpdateStats();
     return { Arg1, Arg2, Arg3 };

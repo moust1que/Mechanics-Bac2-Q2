@@ -45,7 +45,9 @@ class MECHANICS_API ABaseCharacter : public ACharacter {
         UPROPERTY(EditAnywhere, Category = Camera) float CameraZoomMin = 1200.0f;
         UPROPERTY(EditAnywhere, Category = Camera) float CameraZoomMax = 2500.0f;
 
-        UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Widget) UMainHUD* HUDWidget; 
+        UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Widget) UMainHUD* HUDWidget;
+
+        UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Cooldowns) bool AutoRefreshCooldowns = false;
 
         // Stats
         UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Stats) int Level;
@@ -91,6 +93,8 @@ class MECHANICS_API ABaseCharacter : public ACharacter {
         UFUNCTION() void CancelAttack();
         UFUNCTION() bool IsInAbilityTargeting() const;
 
+        virtual void Tick(float DeltaTime) override;
+
     protected:
         virtual void BeginPlay() override;
 
@@ -106,6 +110,10 @@ class MECHANICS_API ABaseCharacter : public ACharacter {
 
         float ShortPressThreshold = 0.3f;
         float FollowTime;
+
+        FRotator TargetRotation;
+        bool ShouldRotate = false;
+        float RotationSpeed = 10.0f;
 
         UFUNCTION() void OnSetDestinationStarted();
         UFUNCTION() void OnSetDestinationTriggered();

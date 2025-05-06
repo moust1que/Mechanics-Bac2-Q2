@@ -38,8 +38,7 @@ void APlayerController_Mechanics::Tick(float DeltaTime) {
             Params.AddIgnoredActor(this);
             
             if(GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params)) {
-                FVector IndicatorCenter = CurrentTargetIndicator->GetActorLocation();
-                FVector Direction = Hit.ImpactPoint - IndicatorCenter;
+                FVector Direction = Hit.ImpactPoint - CurCharacter->GetActorLocation();
                 Direction.Z = 0.0f;
 
                 CurrentTargetIndicator->UpdateIndicatorDirection(Direction);

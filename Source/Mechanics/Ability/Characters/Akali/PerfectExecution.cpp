@@ -52,17 +52,6 @@ void UPerfectExecution::CancelRecast() {
     // RecastTarget = nullptr;   
 }
 
-void UPerfectExecution::ResetCooldown() {
-    IsOnCooldown = false;
-}
-
-void UPerfectExecution::StartCooldown() {
-    IsOnCooldown = true;
-    CurCharacter->GetWorld()->GetTimerManager().SetTimer(CooldownTimer, this, &UPerfectExecution::ResetCooldown, Cooldown, false);
-
-    CurCharacter->HUDWidget->StartCooldown(this);
-}
-
 TArray<float> UPerfectExecution::GetArguments() {
     UpdateStats();
     return { Arg1, Arg2, Arg3 };

@@ -1,6 +1,7 @@
 #include "ShurikenFlip.h"
 #include "../../../Character/BaseCharacter.h"
 #include "ShurikenProjectile.h"
+#include "Components/CapsuleComponent.h"
 
 UShurikenFlip::UShurikenFlip() {
     Level = 0;
@@ -31,16 +32,32 @@ void UShurikenFlip::UpdateStats() {
 }
 
 void UShurikenFlip::ActivateAbility() {
-    if(Level == 0) return;
+    if(Level == 0 || IsOnCooldown) return;
 
-    if(IsOnCooldown) return;
+    CanLaunchAttack = false;
 
     if(CanRecast) {
-        PerformRecast();
+        StartCastTimer(0.25f, "PerformRecast");
         return;
     }
 
-    FVector SpawnLocation = CurCharacter->GetActorLocation() + CurCharacter-> GetActorForwardVector() * 100.0f;
+    StartCastTimer(0.4f, "LaunchAttack");
+}
+
+void UShurikenFlip::LaunchAttack() {
+    CurCharacter->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+    FVector BackwardDirection = -CurCharacter->GetActorForwardVector();
+    float BackDashDistance = 400.0f;
+
+    DashStartLocation = CurCharacter->GetActorLocation();
+    DashTargetLocation = DashStartLocation + BackwardDirection * BackDashDistance;
+    DashDuration = 0.5f;
+    DashElapsedTime = 0.0f;
+
+    CurCharacter->GetWorld()->GetTimerManager().SetTimer(DashTimerHandle, this, &UShurikenFlip::HandleDashTick, 0.01f, true);
+
+    FVector SpawnLocation = CurCharacter->GetActorLocation() + CurCharacter-> GetActorForwardVector() * 100.0f + FVector(0.0f, 0.0f, 30.0f);
     FRotator SpawnRotation = CurCharacter->GetActorRotation();
 
     FActorSpawnParameters SpawnParams;
@@ -50,12 +67,31 @@ void UShurikenFlip::ActivateAbility() {
 
     if(Projectile) {
         Projectile->OnShurikenHit.BindUObject(this, &UShurikenFlip::OnShurikenHit);
+        Projectile->OnShurikenNoHit.BindUObject(this, &UShurikenFlip::OnShurikenMiss);
     }
-
+    
     StartCooldown();
 }
 
+void UShurikenFlip::HandleDashTick() {
+    DashElapsedTime += GetWorld()->GetDeltaSeconds();
+    float Alpha = FMath::Clamp(DashElapsedTime / DashDuration, 0.0f, 1.0f);
+
+    FVector NewLocation = FMath::Lerp(DashStartLocation, DashTargetLocation, Alpha);
+    NewLocation.Z = CurCharacter->GetActorLocation().Z;
+    FRotator OldRotation = CurCharacter->GetActorRotation();
+    CurCharacter->SetActorLocation(NewLocation, true);
+    CurCharacter->SetActorRotation(OldRotation);
+
+    if(Alpha >= 1.0f) {
+        CurCharacter->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+
+        GetWorld()->GetTimerManager().ClearTimer(DashTimerHandle);
+    }
+}
+
 void UShurikenFlip::OnShurikenHit(AActor* HitActor, FVector HitLocation) {
+    ResetCooldown();
     CanRecast = true;
     RecastLocation = HitLocation;
     RecastTarget = HitActor;
@@ -63,35 +99,99 @@ void UShurikenFlip::OnShurikenHit(AActor* HitActor, FVector HitLocation) {
     CurCharacter->GetWorld()->GetTimerManager().SetTimer(RecastWindowTimer, this, &UShurikenFlip::CancelRecast, MarkTimer, false);
 }
 
+void UShurikenFlip::OnShurikenMiss() {
+    ResetCooldown();
+
+    UE_LOG(LogTemp, Warning, TEXT("Miss"));
+
+    if(!CurCharacter->AutoRefreshCooldowns) {
+        StartCooldown();
+    }
+}
+
 void UShurikenFlip::PerformRecast() {
+    CurCharacter->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
     CanRecast = false;
     CurCharacter->GetWorld()->GetTimerManager().ClearTimer(RecastWindowTimer);
 
     FVector DashTarget = RecastTarget ? RecastTarget->GetActorLocation() : RecastLocation;
 
-    FVector DashDirection = (DashTarget - CurCharacter->GetActorLocation()).GetSafeNormal();
+    RecastDashStartLocation = CurCharacter->GetActorLocation();
+    RecastDashTargetLocation = DashTarget;
+    RecastDashElapsedTime = 0.0f;
+
+    float Distance = FVector::Dist(RecastDashStartLocation, RecastDashTargetLocation);
+
     float DashSpeed = 1200.0f;
 
-    CurCharacter->LaunchCharacter(DashDirection * DashSpeed, true, true);
+    RecastDashDuration = Distance / DashSpeed;
+
+    CurCharacter->GetWorld()->GetTimerManager().SetTimer(RecastDashTimerHandle, this, &UShurikenFlip::HandleRecastDashTick, 0.01f, true);
+
+    if(!CurCharacter->AutoRefreshCooldowns) {
+        StartCooldown();
+    }
+}
+
+void UShurikenFlip::HandleRecastDashTick() {
+    RecastDashElapsedTime += CurCharacter->GetWorld()->GetDeltaSeconds();
+    float Alpha = FMath::Clamp(RecastDashElapsedTime / RecastDashDuration, 0.0f, 1.0f);
+
+    FVector NewLocation = FMath::Lerp(RecastDashStartLocation, RecastDashTargetLocation, Alpha);
+    NewLocation.Z = CurCharacter->GetActorLocation().Z;
+    FRotator OldRotation = CurCharacter->GetActorRotation();
+    CurCharacter->SetActorLocation(NewLocation, true);
+    CurCharacter->SetActorRotation(OldRotation);
+
+    if(Alpha >= 1.0f) {
+        CurCharacter->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+
+        CurCharacter->GetWorld()->GetTimerManager().ClearTimer(RecastDashTimerHandle);
+    }
 }
 
 void UShurikenFlip::CancelRecast() {
     CanRecast = false;
     RecastTarget = nullptr;
+
+    if(!CurCharacter->AutoRefreshCooldowns) {
+        StartCooldown();
+    }
 }
 
-void UShurikenFlip::ResetCooldown() {
-    IsOnCooldown = false;
+TArray<float> UShurikenFlip::GetArguments() {
+    UpdateStats();
+    return { Arg1, Arg2, Arg3 };
+}
+
+void UShurikenFlip::StartCastTimer(float CastDuration, FName FunctionName) {
+    FTimerDelegate TimerDel;
+    TimerDel.BindUFunction(this, FunctionName);
+
+    FTimerHandle CastTimerHandle;
+    CurCharacter->GetWorld()->GetTimerManager().SetTimer(CastTimerHandle, TimerDel, CastDuration, false);
 }
 
 void UShurikenFlip::StartCooldown() {
+    if(CurCharacter->AutoRefreshCooldowns) {
+        IsOnCooldown = false;
+        CurCharacter->GetWorld()->GetTimerManager().ClearTimer(CooldownTimer);
+        CurCharacter->HUDWidget->ResetCooldown(this);
+        return;
+    }
+
     IsOnCooldown = true;
     CurCharacter->GetWorld()->GetTimerManager().SetTimer(CooldownTimer, this, &UShurikenFlip::ResetCooldown, Cooldown, false);
 
     CurCharacter->HUDWidget->StartCooldown(this);
 }
 
-TArray<float> UShurikenFlip::GetArguments() {
-    UpdateStats();
-    return { Arg1, Arg2, Arg3 };
+void UShurikenFlip::ResetCooldown() {
+    IsOnCooldown = false;
+    CanLaunchAttack = true;
+
+    CurCharacter->GetWorld()->GetTimerManager().ClearTimer(CooldownTimer);
+
+    CurCharacter->HUDWidget->ResetCooldown(this);
 }

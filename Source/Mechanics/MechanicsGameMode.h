@@ -1,5 +1,3 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -7,13 +5,6 @@
 #include "MechanicsGameMode.generated.h"
 
 UCLASS(minimalapi)
-class AMechanicsGameMode : public AGameModeBase
-{
+class AMechanicsGameMode : public AGameModeBase {
 	GENERATED_BODY()
-
-// public:
-// 	AMechanicsGameMode();
 };
-
-
-
