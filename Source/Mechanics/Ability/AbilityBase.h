@@ -22,13 +22,13 @@ class MECHANICS_API UAbilityBase : public UObject {
         UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Ability) float Cooldown;
         UPROPERTY(EditAnywhere, Category = Ability) bool IsOnCooldown = false;
         UPROPERTY(EditAnywhere, Category = Ability) float BaseRessourceCost;
-        UPROPERTY(EditAnywhere, Category = Ability) float RessourceCost;
+        UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Ability) float RessourceCost;
         UPROPERTY(EditAnywhere, Category = Ability) float BaseDamage;
         UPROPERTY(EditAnywhere, Category = Ability) float AbilityDamage;
         UPROPERTY(EditAnywhere, Category = Ability) float AbilityPower;
         UPROPERTY(EditAnywhere, Category = Ability) float TotalDamage;
 
-        UPROPERTY(EditAnywhere, Category = Ability) bool CanRecast = false;
+        UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Ability) bool CanRecast = false;
         UPROPERTY(EditAnywhere, Category = Ability) float BaseRecastCooldown;
         UPROPERTY(EditAnywhere, Category = Ability) float BaseRecastRessourceCost;
         UPROPERTY(EditAnywhere, Category = Ability) float RecastBaseDamage;

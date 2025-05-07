@@ -131,7 +131,7 @@ void ABaseCharacter::OnSetDestinationReleased() {
     FollowTime = 0.f;
 }
 
-void ABaseCharacter::ActivateAbility(FName AbilitySlot) {
+void ABaseCharacter::ActivateAbility(int AbilitySlot) {
     if(UAbilityBase** Ability = InstantiatedAbilities.Find(AbilitySlot)) {
         (*Ability)->ActivateAbility();
     }
@@ -190,8 +190,22 @@ void ABaseCharacter::ActivateAttackMode(EAbilityInputID Ability) {
 
     FString AbilityName = UEnum::GetValueAsString(Ability);
     AbilityName = AbilityName.RightChop(AbilityName.Find(TEXT("::")) + 2);
-    if(UAbilityBase** FoundAbility = InstantiatedAbilities.Find(*AbilityName)) {
-        if(*FoundAbility && (*FoundAbility)->IsOnCooldown) {
+    int AbilitySlot;
+
+    if(AbilityName == "A") {
+        AbilitySlot = 0;
+    }else if(AbilityName == "Z") {
+        AbilitySlot = 1;
+    }else if(AbilityName == "E") {
+        AbilitySlot = 2;
+    }else if(AbilityName == "R") {
+        AbilitySlot = 3;
+    }else {
+        return;
+    }
+
+    if(UAbilityBase** FoundAbility = InstantiatedAbilities.Find(AbilitySlot)) {
+        if(*FoundAbility && ((*FoundAbility)->IsOnCooldown || ((*FoundAbility)->RessourceCost > Ressource) && !(*FoundAbility)->CanRecast)) {
             return;
         }
     }
@@ -209,8 +223,22 @@ void ABaseCharacter::OnAbilityOverlayRequested(EAbilityInputID Ability) {
 
         FString AbilityName = UEnum::GetValueAsString(Ability);
         AbilityName = AbilityName.RightChop(AbilityName.Find(TEXT("::")) + 2);
+        int AbilitySlot;
 
-        if(UAbilityBase** FoundAbility = InstantiatedAbilities.Find(*AbilityName)) {
+        if(AbilityName == "A") {
+            AbilitySlot = 0;
+        }else if(AbilityName == "Z") {
+            AbilitySlot = 1;
+        }else if(AbilityName == "E") {
+            AbilitySlot = 2;
+        }else if(AbilityName == "R") {
+            AbilitySlot = 3;
+        }else {
+            return;
+        }
+
+
+        if(UAbilityBase** FoundAbility = InstantiatedAbilities.Find(AbilitySlot)) {
             if(!*FoundAbility || (*FoundAbility)->Level == 0) return;
 
             if((*FoundAbility)->CanRecast) {
@@ -250,21 +278,23 @@ void ABaseCharacter::ExecuteAbility(EAbilityInputID Ability) {
         FVector TargetLocation = Hit.Location;
         FVector Direction = (TargetLocation - GetActorLocation()).GetSafeNormal();
         TargetRotation = Direction.Rotation();
+        TargetRotation.Pitch = 0.0f;
+        TargetRotation.Roll = 0.0f;
         ShouldRotate = true;
     }
 
     switch(Ability) {
         case EAbilityInputID::A:
-            ActivateAbility("A");
+            ActivateAbility(0);
             break;
         case EAbilityInputID::Z:
-            ActivateAbility("Z");
+            ActivateAbility(1);
             break;
         case EAbilityInputID::E:
-            ActivateAbility("E");
+            ActivateAbility(2);
             break;
         case EAbilityInputID::R:
-            ActivateAbility("R");
+            ActivateAbility(3);
             break;
         default:
             break;

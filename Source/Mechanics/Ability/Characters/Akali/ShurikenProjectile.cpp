@@ -9,7 +9,10 @@ AShurikenProjectile::AShurikenProjectile() {
 
     CollisionComponent = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
     CollisionComponent->InitSphereRadius(16.0f);
-    CollisionComponent->SetCollisionProfileName(TEXT("BlockAllDynamic"));
+    CollisionComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+    CollisionComponent->SetCollisionObjectType(ECC_WorldDynamic);
+    CollisionComponent->SetCollisionResponseToAllChannels(ECR_Ignore);
+    CollisionComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
     CollisionComponent->OnComponentHit.AddDynamic(this, &AShurikenProjectile::OnHit);
     RootComponent = CollisionComponent;
 
@@ -24,7 +27,6 @@ AShurikenProjectile::AShurikenProjectile() {
     ProjectileMovement->MaxSpeed = 1800.0f;
     ProjectileMovement->bRotationFollowsVelocity = true;
     ProjectileMovement->bShouldBounce = false;
-    ProjectileMovement->ProjectileGravityScale = 0.0f;
 
     InitialLifeSpan = 5.0f;
 }
@@ -46,7 +48,7 @@ void AShurikenProjectile::Tick(float DeltaTime) {
         ProjectileMovement->Deactivate();
 
         FVector CurrentLocation = GetActorLocation();
-        SetActorLocation(FVector(CurrentLocation.X, CurrentLocation.Y, 0.0f));
+        SetActorLocation(FVector(CurrentLocation.X, CurrentLocation.Y, 8.0f));
 
         CollisionComponent->SetSimulatePhysics(false);
         CollisionComponent->SetEnableGravity(false);

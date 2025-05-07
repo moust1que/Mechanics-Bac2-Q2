@@ -138,6 +138,8 @@ ABaseCharacter* APlayerController_Mechanics::SetCharacter() {
     
     UMainHUD* MainHUD = Cast<UMainHUD>(BaseCharacter->HUDWidget);
 
+    bool KeepRefreshStatus = BaseCharacter->AutoRefreshCooldowns;
+
     CurCharacter->Destroy();
 
     FActorSpawnParameters SpawnParams;
@@ -147,6 +149,7 @@ ABaseCharacter* APlayerController_Mechanics::SetCharacter() {
     ABaseCharacter* NewCharacter = GetWorld()->SpawnActor<ABaseCharacter>(NewClass, NewSpawnLocation, NewSpawnRotation, SpawnParams);
 
     NewCharacter->HUDWidget = MainHUD;
+    NewCharacter->AutoRefreshCooldowns = KeepRefreshStatus;
     
     Possess(NewCharacter);
 

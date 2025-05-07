@@ -35,7 +35,7 @@ class MECHANICS_API AShurikenProjectile : public AActor {
         virtual void BeginPlay() override;
 
     private:
-        float MaxRange = 825.0f / 1.2f;
+        float MaxRange = 825.0f / 1.25f;
 
         FVector SpawnLocation;
         bool HasHit = false;

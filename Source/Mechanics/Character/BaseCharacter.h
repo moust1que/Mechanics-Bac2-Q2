@@ -31,15 +31,15 @@ class MECHANICS_API ABaseCharacter : public ACharacter {
     public:
         ABaseCharacter();
 
-        UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Abilities) TMap<FName, TSubclassOf<UAbilityBase>> AbilityMap; // "A", "Z", "E", "R"
+        UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Abilities) TMap<int, TSubclassOf<UAbilityBase>> AbilityMap;
 
-        UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Abilities) TMap<FName, UAbilityBase*> InstantiatedAbilities;
+        UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Abilities) TMap<int, UAbilityBase*> InstantiatedAbilities;
 
         UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input) UNiagaraSystem* FXCursor;
 
         void HandleFunctionCall(FName functionName, const FInputActionInstance& Instance);
 
-        void ActivateAbility(FName AbilitySlot); // "A", "Z", "E", etc.
+        void ActivateAbility(int AbilitySlot);
 
         UPROPERTY(EditAnywhere, Category = Camera) float CameraZoomSpeed = 100.0f;
         UPROPERTY(EditAnywhere, Category = Camera) float CameraZoomMin = 1200.0f;

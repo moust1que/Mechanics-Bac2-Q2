@@ -31,9 +31,7 @@ class MECHANICS_API APlayerController_Mechanics : public APlayerController {
         UPROPERTY(EditAnywhere, Category = Input) TSoftObjectPtr<UInputMappingContext> IMC_Mechanics;
 
         UPROPERTY(EditAnywhere, Category = Input) TArray<UInputAction*> InputActions = {};
-        UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true")) UInputAction* SetDestinationClickAction;
-
-        UPROPERTY(EditAnywhere, Category = Input) TMap<FName, FName> ActionFunctionMapping = {};
+        
         UPROPERTY(EditAnywhere, Category = Input) TMap<UInputAction*, FInputFunctionBinding> FunctionBindings;
 
         UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Characters) TArray<TSubclassOf<ABaseCharacter>> Characters;

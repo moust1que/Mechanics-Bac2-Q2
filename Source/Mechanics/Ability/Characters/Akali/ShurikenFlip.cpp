@@ -45,6 +45,8 @@ void UShurikenFlip::ActivateAbility() {
 }
 
 void UShurikenFlip::LaunchAttack() {
+    CurCharacter->Ressource -= RessourceCost;
+    CurCharacter->HUDWidget->UpdateResourceOnChange();
     CurCharacter->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
     FVector BackwardDirection = -CurCharacter->GetActorForwardVector();
@@ -57,7 +59,7 @@ void UShurikenFlip::LaunchAttack() {
 
     CurCharacter->GetWorld()->GetTimerManager().SetTimer(DashTimerHandle, this, &UShurikenFlip::HandleDashTick, 0.01f, true);
 
-    FVector SpawnLocation = CurCharacter->GetActorLocation() + CurCharacter-> GetActorForwardVector() * 100.0f + FVector(0.0f, 0.0f, 30.0f);
+    FVector SpawnLocation = CurCharacter->GetActorLocation() + CurCharacter-> GetActorForwardVector() * 100.0f + FVector(0.0f, 0.0f, 20.0f);
     FRotator SpawnRotation = CurCharacter->GetActorRotation();
 
     FActorSpawnParameters SpawnParams;
@@ -80,12 +82,24 @@ void UShurikenFlip::HandleDashTick() {
     FVector NewLocation = FMath::Lerp(DashStartLocation, DashTargetLocation, Alpha);
     NewLocation.Z = CurCharacter->GetActorLocation().Z;
     FRotator OldRotation = CurCharacter->GetActorRotation();
+
+    FHitResult Hit;
+    FCollisionQueryParams Params;
+    Params.AddIgnoredActor(CurCharacter);
+
+    bool HitWall = GetWorld()->SweepSingleByChannel(Hit, CurCharacter->GetActorLocation(), NewLocation, FQuat::Identity, ECC_WorldStatic, FCollisionShape::MakeCapsule(CurCharacter->GetCapsuleComponent()->GetScaledCapsuleRadius(), CurCharacter->GetCapsuleComponent()->GetScaledCapsuleHalfHeight()), Params);
+
+    if(HitWall && Hit.GetActor()->ActorHasTag("Walls")) {
+        CurCharacter->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+        GetWorld()->GetTimerManager().ClearTimer(DashTimerHandle);
+        return;
+    }
+
     CurCharacter->SetActorLocation(NewLocation, true);
     CurCharacter->SetActorRotation(OldRotation);
 
     if(Alpha >= 1.0f) {
         CurCharacter->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-
         GetWorld()->GetTimerManager().ClearTimer(DashTimerHandle);
     }
 }
@@ -93,6 +107,7 @@ void UShurikenFlip::HandleDashTick() {
 void UShurikenFlip::OnShurikenHit(AActor* HitActor, FVector HitLocation) {
     ResetCooldown();
     CanRecast = true;
+    CurCharacter->HUDWidget->UpdateSpellRecastDisplay(this);
     RecastLocation = HitLocation;
     RecastTarget = HitActor;
 
@@ -101,8 +116,6 @@ void UShurikenFlip::OnShurikenHit(AActor* HitActor, FVector HitLocation) {
 
 void UShurikenFlip::OnShurikenMiss() {
     ResetCooldown();
-
-    UE_LOG(LogTemp, Warning, TEXT("Miss"));
 
     if(!CurCharacter->AutoRefreshCooldowns) {
         StartCooldown();
@@ -113,9 +126,22 @@ void UShurikenFlip::PerformRecast() {
     CurCharacter->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
     CanRecast = false;
+    CurCharacter->HUDWidget->UpdateSpellRecastDisplay(this);
     CurCharacter->GetWorld()->GetTimerManager().ClearTimer(RecastWindowTimer);
 
-    FVector DashTarget = RecastTarget ? RecastTarget->GetActorLocation() : RecastLocation;
+    FVector DashTarget;
+    if(RecastTarget) {
+        UCapsuleComponent* TargetCapsuleComponent = RecastTarget->FindComponentByClass<UCapsuleComponent>();
+        UCapsuleComponent* MyCapsuleComponent = CurCharacter->GetCapsuleComponent();
+
+        if(TargetCapsuleComponent && MyCapsuleComponent) {
+            float CombinedRadius = TargetCapsuleComponent->GetScaledCapsuleRadius() + MyCapsuleComponent->GetScaledCapsuleRadius();
+            FVector Direction = (RecastTarget->GetActorLocation() - CurCharacter->GetActorLocation()).GetSafeNormal();
+            DashTarget = RecastTarget->GetActorLocation() - Direction * CombinedRadius;
+        }else {
+            DashTarget = RecastLocation;
+        }
+    }
 
     RecastDashStartLocation = CurCharacter->GetActorLocation();
     RecastDashTargetLocation = DashTarget;
@@ -153,7 +179,8 @@ void UShurikenFlip::HandleRecastDashTick() {
 
 void UShurikenFlip::CancelRecast() {
     CanRecast = false;
-    RecastTarget = nullptr;
+    CurCharacter->HUDWidget->UpdateSpellRecastDisplay(this);
+    // RecastTarget = nullptr;
 
     if(!CurCharacter->AutoRefreshCooldowns) {
         StartCooldown();
