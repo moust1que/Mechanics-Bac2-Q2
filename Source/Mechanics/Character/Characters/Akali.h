@@ -12,8 +12,6 @@ class MECHANICS_API AAkali : public ABaseCharacter {
 	GENERATED_BODY()
 
     public:
-        UFUNCTION(BlueprintCallable, Category = Character) void LevelUP() override;
-
         UPROPERTY(EditDefaultsOnly, Category = Abilities) TSubclassOf<AShurikenProjectile> ShurikenProjectileClass;
 
     protected:

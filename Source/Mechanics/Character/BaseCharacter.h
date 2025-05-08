@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "../Widget/MainHUD.h"
+#include "../Widget/HealthBar.h"
 #include "BaseCharacter.generated.h"
 
 // Forward declaration
@@ -46,8 +47,13 @@ class MECHANICS_API ABaseCharacter : public ACharacter {
         UPROPERTY(EditAnywhere, Category = Camera) float CameraZoomMax = 2500.0f;
 
         UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Widget) UMainHUD* HUDWidget;
+        UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Widget) UHealthBar* HealthBarWidget;
 
         UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Cooldowns) bool AutoRefreshCooldowns = false;
+
+        UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Character) bool IsEnemy = false;
+
+        ERessourceType RessourceType;
 
         // Stats
         UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Stats) int Level;
@@ -78,22 +84,33 @@ class MECHANICS_API ABaseCharacter : public ACharacter {
         UPROPERTY(EditAnywhere, Category = Stats) float MoveSpeed;
         UPROPERTY(EditAnywhere, Category = Stats) float AttackRange;
         UPROPERTY(EditAnywhere, Category = Stats) float BaseHealthRegen;
-        UPROPERTY(EditAnywhere, Category = Stats) float HealthRegen;
+        UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Stats) float HealthRegen;
         UPROPERTY(EditAnywhere, Category = Stats) float HealthRegenPerLevel;
         UPROPERTY(EditAnywhere, Category = Stats) float BaseRessourceRegen;
-        UPROPERTY(EditAnywhere, Category = Stats) float RessourceRegen;
+        UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Stats) float RessourceRegen;
         UPROPERTY(EditAnywhere, Category = Stats) float RessourceRegenPerLevel;
 
         UPROPERTY(EditAnywhere, Category = Indicators) TMap<EAbilityInputID, FAbiliyIndicatorSet> AbilityIndicators;
 
         UPROPERTY() AAbilityTargetingIndicator* CurrentTargetIndicator = nullptr;
 
-        virtual void LevelUP() {};
+        bool IsUsingAbility = false;
 
-        UFUNCTION() void CancelAttack();
+        UFUNCTION(BlueprintCallable, Category = Ability) void Ability1();
+        UFUNCTION(BlueprintCallable, Category = Ability) void Ability2();
+        UFUNCTION(BlueprintCallable, Category = Ability) void Ability3();
+        UFUNCTION(BlueprintCallable, Category = Ability) void Ability4();
+
+        UFUNCTION(BlueprintCallable, Category = Character) void LevelUP();
+        virtual void ReceiveDamage(float Damage) {};
+
+        UFUNCTION(BlueprintCallable, Category = Ability) void CancelAttack();
         UFUNCTION() bool IsInAbilityTargeting() const;
 
         virtual void Tick(float DeltaTime) override;
+
+        void LaunchRegen();
+        void HandleRegen();
 
     protected:
         virtual void BeginPlay() override;
@@ -118,10 +135,6 @@ class MECHANICS_API ABaseCharacter : public ACharacter {
         UFUNCTION() void OnSetDestinationStarted();
         UFUNCTION() void OnSetDestinationTriggered();
         UFUNCTION() void OnSetDestinationReleased();
-        UFUNCTION() void Ability1();
-        UFUNCTION() void Ability2();
-        UFUNCTION() void Ability3();
-        UFUNCTION() void Ability4();
         UFUNCTION() void ZoomCamera(const FInputActionInstance& Instance);
         UFUNCTION() void ConfirmAttack();
         UFUNCTION() void ActivateAttackMode(EAbilityInputID Ability);
@@ -130,4 +143,7 @@ class MECHANICS_API ABaseCharacter : public ACharacter {
         UFUNCTION() void OnAbilityOverlayHideRequested();
         
         virtual void UpdateStats() {};
+
+        bool CanUseAbility(EAbilityInputID Ability);
+        int GetAbilitySlot(EAbilityInputID Ability) const;
 };

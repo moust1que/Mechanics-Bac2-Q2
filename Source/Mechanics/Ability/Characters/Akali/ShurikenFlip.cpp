@@ -34,8 +34,6 @@ void UShurikenFlip::UpdateStats() {
 void UShurikenFlip::ActivateAbility() {
     if(Level == 0 || IsOnCooldown) return;
 
-    CanLaunchAttack = false;
-
     if(CanRecast) {
         StartCastTimer(0.25f, "PerformRecast");
         return;
@@ -45,8 +43,10 @@ void UShurikenFlip::ActivateAbility() {
 }
 
 void UShurikenFlip::LaunchAttack() {
+    CurCharacter->IsUsingAbility = false;
     CurCharacter->Ressource -= RessourceCost;
     CurCharacter->HUDWidget->UpdateResourceOnChange();
+    CurCharacter->HealthBarWidget->UpdateResourceOnChange(CurCharacter->Ressource, CurCharacter->MaxRessource);
     CurCharacter->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
     FVector BackwardDirection = -CurCharacter->GetActorForwardVector();
@@ -111,6 +111,11 @@ void UShurikenFlip::OnShurikenHit(AActor* HitActor, FVector HitLocation) {
     RecastLocation = HitLocation;
     RecastTarget = HitActor;
 
+    ABaseCharacter* HitCharacter = Cast<ABaseCharacter>(HitActor);
+    if(HitCharacter) {
+        HitCharacter->ReceiveDamage(TotalDamage);
+    }
+
     CurCharacter->GetWorld()->GetTimerManager().SetTimer(RecastWindowTimer, this, &UShurikenFlip::CancelRecast, MarkTimer, false);
 }
 
@@ -123,6 +128,7 @@ void UShurikenFlip::OnShurikenMiss() {
 }
 
 void UShurikenFlip::PerformRecast() {
+    CurCharacter->IsUsingAbility = false;
     CurCharacter->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
     CanRecast = false;
@@ -174,13 +180,17 @@ void UShurikenFlip::HandleRecastDashTick() {
         CurCharacter->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
         CurCharacter->GetWorld()->GetTimerManager().ClearTimer(RecastDashTimerHandle);
+
+        ABaseCharacter* HitCharacter = Cast<ABaseCharacter>(RecastTarget);
+        if(HitCharacter) {
+            HitCharacter->ReceiveDamage(RecastTotalDamage);
+        }
     }
 }
 
 void UShurikenFlip::CancelRecast() {
     CanRecast = false;
     CurCharacter->HUDWidget->UpdateSpellRecastDisplay(this);
-    // RecastTarget = nullptr;
 
     if(!CurCharacter->AutoRefreshCooldowns) {
         StartCooldown();
@@ -216,7 +226,7 @@ void UShurikenFlip::StartCooldown() {
 
 void UShurikenFlip::ResetCooldown() {
     IsOnCooldown = false;
-    CanLaunchAttack = true;
+    CanBeUsed = true;
 
     CurCharacter->GetWorld()->GetTimerManager().ClearTimer(CooldownTimer);
 

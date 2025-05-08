@@ -14,4 +14,7 @@ class MECHANICS_API UMainHUD : public UUserWidget {
         UFUNCTION(BlueprintImplementableEvent) void ResetCooldown(UAbilityBase* Ability);
         UFUNCTION(BlueprintImplementableEvent) void UpdateSpellRecastDisplay(UAbilityBase* Ability);
         UFUNCTION(BlueprintImplementableEvent) void UpdateResourceOnChange();
+        UFUNCTION(BlueprintImplementableEvent) void UpdateHealthOnChange();
+
+        UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Ability) bool AbilityClicked = false;
 };

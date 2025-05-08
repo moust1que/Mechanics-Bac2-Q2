@@ -27,6 +27,13 @@ void ABlitzcrank::BeginPlay() {
     BaseRessourceRegen = 8.5f;
     RessourceRegenPerLevel = 0.8f;
     UpdateStats();
+
+    RessourceType = ERessourceType::Mana;
+    if(HealthBarWidget) {
+        HealthBarWidget->DisplayResourceBar(RessourceType);
+    }
+
+    Cast<ABaseCharacter>(this)->LaunchRegen();
 }
 
 void ABlitzcrank::UpdateStats() {
@@ -41,11 +48,13 @@ void ABlitzcrank::UpdateStats() {
     RessourceRegen = BaseRessourceRegen + RessourceRegenPerLevel * (Level - 1);
 }
 
-void ABlitzcrank::LevelUP() {
-    if(Level < MaxLevel) {
-        Level++;
-        Health += HealthPerLevel;
-        Ressource += RessourcePerLevel;
-        UpdateStats();
-    }
-}
+// void ABlitzcrank::LevelUP() {
+//     if(Level < MaxLevel) {
+//         Level++;
+//         Health += HealthPerLevel;
+//         Ressource += RessourcePerLevel;
+//         UpdateStats();
+//         HealthBarWidget->UpdateHealthOnChange(Health, MaxHealth);
+//         HealthBarWidget->UpdateResourceOnChange(Ressource, MaxRessource);
+//     }
+// }

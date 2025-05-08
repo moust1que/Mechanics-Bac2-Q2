@@ -55,8 +55,6 @@ class MECHANICS_API UShurikenFlip : public UAbilityBase {
         float RecastDashDuration;
         float RecastDashElapsedTime;
 
-        bool CanLaunchAttack = true;
-
         UFUNCTION() void HandleDashTick();
         UFUNCTION() void HandleRecastDashTick();
 };

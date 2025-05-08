@@ -42,6 +42,8 @@ class MECHANICS_API UAbilityBase : public UObject {
 
         FTimerHandle CooldownTimer;
 
+        bool CanBeUsed = true;
+
         virtual void ActivateAbility() {};
         UFUNCTION(BlueprintCallable) virtual void UpdateStats() {};
         virtual void StartCooldown() {};

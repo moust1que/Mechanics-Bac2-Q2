@@ -27,6 +27,13 @@ void AAkali::BeginPlay() {
     BaseRessourceRegen = 50.0f;
     RessourceRegenPerLevel = 0.0f;
     UpdateStats();
+
+    RessourceType = ERessourceType::Energy;
+    if(HealthBarWidget) {
+        HealthBarWidget->DisplayResourceBar(RessourceType);
+    }
+
+    Cast<ABaseCharacter>(this)->LaunchRegen();
 }
 
 void AAkali::UpdateStats() {
@@ -41,11 +48,13 @@ void AAkali::UpdateStats() {
     RessourceRegen = BaseRessourceRegen + RessourceRegenPerLevel * (Level - 1);
 }
 
-void AAkali::LevelUP() {
-    if(Level < MaxLevel) {
-        Level++;
-        Health += HealthPerLevel;
-        Ressource += RessourcePerLevel;
-        UpdateStats();
-    }
-}
+// void AAkali::LevelUP() {
+//     if(Level < MaxLevel) {
+//         Level++;
+//         Health += HealthPerLevel;
+//         Ressource += RessourcePerLevel;
+//         UpdateStats();
+//         HealthBarWidget->UpdateHealthOnChange(Health, MaxHealth);
+//         HealthBarWidget->UpdateResourceOnChange(Ressource, MaxRessource);
+//     }
+// }

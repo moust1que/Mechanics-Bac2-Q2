@@ -7,6 +7,7 @@
 #include "NiagaraFunctionLibrary.h"
 #include "../Ability/AbilityTargetingIndicator.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Components/WidgetComponent.h"
 
 ABaseCharacter::ABaseCharacter() {
     SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
@@ -35,6 +36,12 @@ ABaseCharacter::ABaseCharacter() {
 
 void ABaseCharacter::BeginPlay() {
 	Super::BeginPlay();
+
+    UWidgetComponent* WidgetComponent = Cast<UWidgetComponent>(GetComponentByClass(UWidgetComponent::StaticClass()));
+
+    if(WidgetComponent) {
+        HealthBarWidget = Cast<UHealthBar>(WidgetComponent->GetUserWidgetObject());
+    }
 
     bUseControllerRotationYaw = false;
     bUseControllerRotationPitch = false;
@@ -165,11 +172,19 @@ void ABaseCharacter::ZoomCamera(const FInputActionInstance& Instance) {
 }
 
 void ABaseCharacter::ConfirmAttack() {
-    if(ActiveAbilityInputID == EAbilityInputID::None) return;
+    if(IsUsingAbility || ActiveAbilityInputID == EAbilityInputID::None || !CanUseAbility(ActiveAbilityInputID)) {
+        CancelAttack();
+        return;
+    }
+
+    if(HUDWidget->AbilityClicked) {
+        HUDWidget->AbilityClicked = false;
+    }
 
     APlayerController* PlayerController = Cast<APlayerController>(GetController());
     PlayerController->StopMovement();
 
+    IsUsingAbility = true;
     ExecuteAbility(ActiveAbilityInputID);
 
     ActiveAbilityInputID = EAbilityInputID::None;
@@ -179,33 +194,23 @@ void ABaseCharacter::ConfirmAttack() {
 void ABaseCharacter::CancelAttack() {
     if(ActiveAbilityInputID == EAbilityInputID::None) return;
 
+    if(HUDWidget->AbilityClicked) {
+        HUDWidget->AbilityClicked = false;
+    }
+
     ActiveAbilityInputID = EAbilityInputID::None;
     OnAbilityOverlayHideRequested();
 }
 
 void ABaseCharacter::ActivateAttackMode(EAbilityInputID Ability) {
-    if(ActiveAbilityInputID != EAbilityInputID::None) {
+    if(IsUsingAbility || ActiveAbilityInputID != EAbilityInputID::None || !CanUseAbility(Ability)) {
         CancelAttack();
     }
-
-    FString AbilityName = UEnum::GetValueAsString(Ability);
-    AbilityName = AbilityName.RightChop(AbilityName.Find(TEXT("::")) + 2);
-    int AbilitySlot;
-
-    if(AbilityName == "A") {
-        AbilitySlot = 0;
-    }else if(AbilityName == "Z") {
-        AbilitySlot = 1;
-    }else if(AbilityName == "E") {
-        AbilitySlot = 2;
-    }else if(AbilityName == "R") {
-        AbilitySlot = 3;
-    }else {
-        return;
-    }
+    
+    int AbilitySlot = GetAbilitySlot(Ability);
 
     if(UAbilityBase** FoundAbility = InstantiatedAbilities.Find(AbilitySlot)) {
-        if(*FoundAbility && ((*FoundAbility)->IsOnCooldown || ((*FoundAbility)->RessourceCost > Ressource) && !(*FoundAbility)->CanRecast)) {
+        if((*FoundAbility)->IsOnCooldown || ((*FoundAbility)->RessourceCost > Ressource) && !(*FoundAbility)->CanRecast) {
             return;
         }
     }
@@ -221,25 +226,12 @@ void ABaseCharacter::OnAbilityOverlayRequested(EAbilityInputID Ability) {
     if(const FAbiliyIndicatorSet* IndicatorSet = AbilityIndicators.Find(Ability)) {
         TSubclassOf<AAbilityTargetingIndicator> IndicatorToSpawn = nullptr;
 
-        FString AbilityName = UEnum::GetValueAsString(Ability);
-        AbilityName = AbilityName.RightChop(AbilityName.Find(TEXT("::")) + 2);
-        int AbilitySlot;
+        int AbilitySlot = GetAbilitySlot(Ability);
 
-        if(AbilityName == "A") {
-            AbilitySlot = 0;
-        }else if(AbilityName == "Z") {
-            AbilitySlot = 1;
-        }else if(AbilityName == "E") {
-            AbilitySlot = 2;
-        }else if(AbilityName == "R") {
-            AbilitySlot = 3;
-        }else {
-            return;
-        }
-
+        if(!CanUseAbility(Ability)) return;
 
         if(UAbilityBase** FoundAbility = InstantiatedAbilities.Find(AbilitySlot)) {
-            if(!*FoundAbility || (*FoundAbility)->Level == 0) return;
+            if((*FoundAbility)->Level == 0) return;
 
             if((*FoundAbility)->CanRecast) {
                 IndicatorToSpawn = IndicatorSet->SecondCastIndicator;
@@ -283,24 +275,66 @@ void ABaseCharacter::ExecuteAbility(EAbilityInputID Ability) {
         ShouldRotate = true;
     }
 
-    switch(Ability) {
-        case EAbilityInputID::A:
-            ActivateAbility(0);
-            break;
-        case EAbilityInputID::Z:
-            ActivateAbility(1);
-            break;
-        case EAbilityInputID::E:
-            ActivateAbility(2);
-            break;
-        case EAbilityInputID::R:
-            ActivateAbility(3);
-            break;
-        default:
-            break;
-    }
+    int AbilitySlot = GetAbilitySlot(Ability);
+    ActivateAbility(AbilitySlot);
 }
 
 bool ABaseCharacter::IsInAbilityTargeting() const {
     return ActiveAbilityInputID != EAbilityInputID::None;
+}
+
+void ABaseCharacter::LaunchRegen() {
+    FTimerHandle TimerHandle;
+    GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &ABaseCharacter::HandleRegen, 1.0f, true);
+}
+
+void ABaseCharacter::HandleRegen() {
+    if(Ressource < MaxRessource) {
+        Ressource += RessourceRegen / 5.0f;
+        Ressource = FMath::Clamp(Ressource, 0.0f, MaxRessource);
+        HealthBarWidget->UpdateResourceOnChange(Ressource, MaxRessource);
+        HUDWidget->UpdateResourceOnChange();
+    }
+    if(Health < MaxHealth) {
+        Health += HealthRegen / 5.0f;
+        Health = FMath::Clamp(Health, 0.0f, MaxHealth);
+        HealthBarWidget->UpdateHealthOnChange(Health, MaxHealth);
+        HUDWidget->UpdateHealthOnChange();
+    }
+}
+
+bool ABaseCharacter::CanUseAbility(EAbilityInputID Ability) {
+    int AbilitySlot = GetAbilitySlot(Ability);
+    if(UAbilityBase** FoundAbility = InstantiatedAbilities.Find(AbilitySlot)) {
+        return (*FoundAbility)->CanBeUsed;
+    }
+
+    return false;
+}
+
+int ABaseCharacter::GetAbilitySlot(EAbilityInputID Ability) const {
+    switch(Ability) {
+        case EAbilityInputID::A:
+            return 0;
+        case EAbilityInputID::Z:
+            return 1;
+        case EAbilityInputID::E:
+            return 2;
+        case EAbilityInputID::R:
+            return 3;
+        default:
+            return -1;
+    }
+}
+
+void ABaseCharacter::LevelUP() {
+    if(Level < MaxLevel) {
+        Level++;
+        Health += HealthPerLevel;
+        Ressource += RessourcePerLevel;
+        UpdateStats();
+        HealthBarWidget->UpdateHealthOnChange(Health, MaxHealth);
+        HealthBarWidget->UpdateResourceOnChange(Ressource, MaxRessource);
+        HealthBarWidget->UpdateLevel();
+    }
 }
