@@ -72,7 +72,7 @@ void UShurikenFlip::LaunchAttack() {
         Projectile->OnShurikenNoHit.BindUObject(this, &UShurikenFlip::OnShurikenMiss);
     }
     
-    StartCooldown();
+    StartCooldown(Cooldown);
 }
 
 void UShurikenFlip::HandleDashTick() {
@@ -122,9 +122,7 @@ void UShurikenFlip::OnShurikenHit(AActor* HitActor, FVector HitLocation) {
 void UShurikenFlip::OnShurikenMiss() {
     ResetCooldown();
 
-    if(!CurCharacter->AutoRefreshCooldowns) {
-        StartCooldown();
-    }
+    StartCooldown(Cooldown);
 }
 
 void UShurikenFlip::PerformRecast() {
@@ -161,9 +159,7 @@ void UShurikenFlip::PerformRecast() {
 
     CurCharacter->GetWorld()->GetTimerManager().SetTimer(RecastDashTimerHandle, this, &UShurikenFlip::HandleRecastDashTick, 0.01f, true);
 
-    if(!CurCharacter->AutoRefreshCooldowns) {
-        StartCooldown();
-    }
+    StartCooldown(Cooldown);
 }
 
 void UShurikenFlip::HandleRecastDashTick() {
@@ -192,43 +188,10 @@ void UShurikenFlip::CancelRecast() {
     CanRecast = false;
     CurCharacter->HUDWidget->UpdateSpellRecastDisplay(this);
 
-    if(!CurCharacter->AutoRefreshCooldowns) {
-        StartCooldown();
-    }
+    StartCooldown(Cooldown);
 }
 
 TArray<float> UShurikenFlip::GetArguments() {
     UpdateStats();
     return { Arg1, Arg2, Arg3 };
-}
-
-void UShurikenFlip::StartCastTimer(float CastDuration, FName FunctionName) {
-    FTimerDelegate TimerDel;
-    TimerDel.BindUFunction(this, FunctionName);
-
-    FTimerHandle CastTimerHandle;
-    CurCharacter->GetWorld()->GetTimerManager().SetTimer(CastTimerHandle, TimerDel, CastDuration, false);
-}
-
-void UShurikenFlip::StartCooldown() {
-    if(CurCharacter->AutoRefreshCooldowns) {
-        IsOnCooldown = false;
-        CurCharacter->GetWorld()->GetTimerManager().ClearTimer(CooldownTimer);
-        CurCharacter->HUDWidget->ResetCooldown(this);
-        return;
-    }
-
-    IsOnCooldown = true;
-    CurCharacter->GetWorld()->GetTimerManager().SetTimer(CooldownTimer, this, &UShurikenFlip::ResetCooldown, Cooldown, false);
-
-    CurCharacter->HUDWidget->StartCooldown(this);
-}
-
-void UShurikenFlip::ResetCooldown() {
-    IsOnCooldown = false;
-    CanBeUsed = true;
-
-    CurCharacter->GetWorld()->GetTimerManager().ClearTimer(CooldownTimer);
-
-    CurCharacter->HUDWidget->ResetCooldown(this);
 }

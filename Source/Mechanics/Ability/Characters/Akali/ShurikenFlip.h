@@ -18,10 +18,7 @@ class MECHANICS_API UShurikenFlip : public UAbilityBase {
         UFUNCTION() void ActivateAbility() override;
         void UpdateStats() override;
         TArray<float> GetArguments() override;
-        UFUNCTION() void StartCastTimer(float CastDuration, FName FunctionName) override;
         UFUNCTION() void LaunchAttack() override;
-        UFUNCTION() void StartCooldown() override;
-        void ResetCooldown() override;
 
         UFUNCTION() void PerformRecast();
         UFUNCTION() void CancelRecast();

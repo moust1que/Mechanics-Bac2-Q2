@@ -22,4 +22,23 @@ class MECHANICS_API UPerfectExecution : public UAbilityBase {
         UPROPERTY(EditAnywhere, Category = Ability) float MaxBaseDamage;
 
         UPROPERTY() AAkali* AkaliCharacter = nullptr;
+
+        FVector DashStartLocation;
+        FVector DashTargetLocation;
+        float DashDuration;
+        float DashElapsedTime;
+
+        FVector RecastStartLocation;
+        FVector RecastTargetLocation;
+        float RecastDuration;
+        float RecastElapsedTime;
+
+        FTimerHandle DashTimerHandle;
+        FTimerHandle RecastWindowTimer;
+        FTimerHandle RecastTimerHandle;
+
+        TSet<ABaseCharacter*> DamagedEnemies;
+
+        UFUNCTION() void HandleDashTick();
+        UFUNCTION() void HandleRecastDashTick();
 };

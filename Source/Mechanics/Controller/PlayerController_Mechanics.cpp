@@ -12,7 +12,12 @@ APlayerController_Mechanics::APlayerController_Mechanics() {
     bShowMouseCursor = true;
     bEnableClickEvents = true;
     bEnableMouseOverEvents = true;
-    DefaultMouseCursor = EMouseCursor::Default;
+}
+
+void APlayerController_Mechanics::BeginPlay() {
+    Super::BeginPlay();
+
+    SetMouseCursorWidget(EMouseCursor::Default, DefaultCursorBrush);
 }
 
 void APlayerController_Mechanics::Tick(float DeltaTime) {
@@ -37,7 +42,7 @@ void APlayerController_Mechanics::Tick(float DeltaTime) {
             FCollisionQueryParams Params;
             Params.AddIgnoredActor(this);
             
-            if(GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params)) {
+            if(GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_GameTraceChannel1, Params)) {
                 FVector Direction = Hit.ImpactPoint - CurCharacter->GetActorLocation();
                 Direction.Z = 0.0f;
 

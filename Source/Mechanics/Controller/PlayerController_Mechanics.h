@@ -38,10 +38,15 @@ class MECHANICS_API APlayerController_Mechanics : public APlayerController {
 
         UFUNCTION(BlueprintCallable) ABaseCharacter* SetCharacter();
 
+        UPROPERTY(EditAnywhere, Category = Cursors) UUserWidget* DefaultCursorBrush;
+        UPROPERTY(EditAnywhere, Category = Cursors) UUserWidget* TargetingCursorBrush;
+        UPROPERTY(EditAnywhere, Category = Cursors) UUserWidget* TargetingEnemyCursorBrush;
+
         virtual void Tick(float DeltaTime) override;
 
     protected:
         virtual void SetupInputComponent() override;
+        virtual void BeginPlay() override;
 
     private:
         void DynamicInputHandler(FName FunctionName, const FInputActionInstance& Instance);

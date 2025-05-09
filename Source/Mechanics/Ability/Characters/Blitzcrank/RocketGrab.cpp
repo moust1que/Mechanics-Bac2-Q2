@@ -26,7 +26,7 @@ void URocketGrab::ActivateAbility() {
 
     if(IsOnCooldown) return;
 
-    StartCooldown();
+    StartCooldown(Cooldown);
 }
 
 TArray<float> URocketGrab::GetArguments() {

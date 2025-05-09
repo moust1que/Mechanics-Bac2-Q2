@@ -43,12 +43,18 @@ class MECHANICS_API UAbilityBase : public UObject {
         FTimerHandle CooldownTimer;
 
         bool CanBeUsed = true;
+        bool NeedEnemyTarget = false;
+        bool NeedEnemytargetRecast = false;
+
+        AActor* EnemyTarget = nullptr;
+
+        float AbilityRange;
 
         virtual void ActivateAbility() {};
         UFUNCTION(BlueprintCallable) virtual void UpdateStats() {};
-        virtual void StartCooldown() {};
-        UFUNCTION(BlueprintCallable, Category = Ability) virtual void ResetCooldown() {};
+        /*virtual */void StartCooldown(float CooldowToUse)/* {}*/;
+        UFUNCTION(BlueprintCallable, Category = Ability)/* virtual*/ void ResetCooldown()/* {}*/;
         UFUNCTION(BlueprintCallable) virtual TArray<float> GetArguments() {return {Arg1, Arg2, Arg3};};
-        virtual void StartCastTimer(float CastDuration, FName FunctionName) {};
+        /*virtual */void StartCastTimer(float CastDuration, FName FunctionName)/* {}*/;
         virtual void LaunchAttack() {};
 };

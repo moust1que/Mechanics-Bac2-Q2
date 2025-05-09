@@ -10,7 +10,7 @@ class MECHANICS_API UMainHUD : public UUserWidget {
 	GENERATED_BODY()
 
     public:
-        UFUNCTION(BlueprintImplementableEvent) void StartCooldown(UAbilityBase* Ability);
+        UFUNCTION(BlueprintImplementableEvent) void StartCooldown(UAbilityBase* Ability, float Cooldown);
         UFUNCTION(BlueprintImplementableEvent) void ResetCooldown(UAbilityBase* Ability);
         UFUNCTION(BlueprintImplementableEvent) void UpdateSpellRecastDisplay(UAbilityBase* Ability);
         UFUNCTION(BlueprintImplementableEvent) void UpdateResourceOnChange();

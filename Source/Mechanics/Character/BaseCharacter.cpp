@@ -8,6 +8,7 @@
 #include "../Ability/AbilityTargetingIndicator.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/WidgetComponent.h"
+#include "../Controller/PlayerController_Mechanics.h"
 
 ABaseCharacter::ABaseCharacter() {
     SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
@@ -73,9 +74,30 @@ void ABaseCharacter::Tick(float DeltaTime) {
     }
 
     if(CurrentTargetIndicator) {
-        CurrentTargetIndicator->SetActorLocation(FVector(GetActorLocation().X, GetActorLocation().Y, 0.0f));
+        CurrentTargetIndicator->SetActorLocation(FVector(GetActorLocation().X, GetActorLocation().Y, 0.1f));
         CurrentTargetIndicator->SetActorRotation(FRotator(0.0f, 0.0f, 0.0f));
     }
+
+    if(IsApproachingTarget && PendingAbilityTarget && PendingAbilityInputID != EAbilityInputID::None) {
+        float Distance = FVector::Dist(GetActorLocation(), PendingAbilityTarget->GetActorLocation());
+
+        int AbilitySlot = GetAbilitySlot(PendingAbilityInputID);
+        if(UAbilityBase** FoundAbility = InstantiatedAbilities.Find(AbilitySlot)) {
+            if(Distance <= (*FoundAbility)->AbilityRange) {
+                GetController()->StopMovement();
+
+                ActiveAbilityInputID = PendingAbilityInputID;
+
+                ConfirmAttack();
+
+                PendingAbilityTarget = nullptr;
+                PendingAbilityInputID = EAbilityInputID::None;
+                IsApproachingTarget = false;
+            }
+        }
+    }
+
+    UpdateCursor();
 }
 
 void ABaseCharacter::HandleFunctionCall(FName functionName, const FInputActionInstance& Instance) {
@@ -91,6 +113,13 @@ void ABaseCharacter::OnSetDestinationStarted() {
         CancelAttack();
         WasCancellingAbility = true;
         return;
+    }
+
+    if(IsApproachingTarget) {
+        PendingAbilityTarget = nullptr;
+        PendingAbilityInputID = EAbilityInputID::None;
+        IsApproachingTarget = false;
+        CancelAttack();
     }
 
     GetController()->StopMovement();
@@ -177,14 +206,14 @@ void ABaseCharacter::ConfirmAttack() {
         return;
     }
 
+    IsUsingAbility = true;
+
     if(HUDWidget->AbilityClicked) {
         HUDWidget->AbilityClicked = false;
     }
 
     APlayerController* PlayerController = Cast<APlayerController>(GetController());
     PlayerController->StopMovement();
-
-    IsUsingAbility = true;
     ExecuteAbility(ActiveAbilityInputID);
 
     ActiveAbilityInputID = EAbilityInputID::None;
@@ -199,6 +228,7 @@ void ABaseCharacter::CancelAttack() {
     }
 
     ActiveAbilityInputID = EAbilityInputID::None;
+
     OnAbilityOverlayHideRequested();
 }
 
@@ -245,7 +275,7 @@ void ABaseCharacter::OnAbilityOverlayRequested(EAbilityInputID Ability) {
             SpawnParameters.Owner = this;
             
             FVector SpawnLocation = GetActorLocation();
-            SpawnLocation.Z = 0.0f;
+            SpawnLocation.Z = 0.1f;
             FRotator SpawnRotation = GetActorRotation();
 
             CurrentTargetIndicator = GetWorld()->SpawnActor<AAbilityTargetingIndicator>(IndicatorToSpawn, SpawnLocation, SpawnRotation, SpawnParameters);
@@ -267,6 +297,29 @@ void ABaseCharacter::ExecuteAbility(EAbilityInputID Ability) {
     FHitResult Hit;
 
     if(PlayerController->GetHitResultUnderCursor(ECC_Visibility, true, Hit)) {
+        if(NeedEnemyTarget(Ability) && !HasEnemyTarget(Ability)) {
+            SetEnemyTarget(Ability, Hit.GetActor());
+            IsUsingAbility = false;
+            if(!HasEnemyTarget(Ability)) return;
+
+            float Distance = FVector::Dist(GetActorLocation(), Hit.GetActor()->GetActorLocation());
+            int AbilitySlot = GetAbilitySlot(Ability);
+
+            if(UAbilityBase** FoundAbility = InstantiatedAbilities.Find(AbilitySlot)) {
+                float AbilityRange = (*FoundAbility)->AbilityRange;
+
+                if(Distance > AbilityRange) {
+                    PendingAbilityTarget = Hit.GetActor();
+                    PendingAbilityInputID = Ability;
+                    IsApproachingTarget = true;
+                    IsUsingAbility = false;
+
+                    UAIBlueprintHelperLibrary::SimpleMoveToActor(PlayerController, PendingAbilityTarget);
+                    return;
+                }
+            }
+        }
+        
         FVector TargetLocation = Hit.Location;
         FVector Direction = (TargetLocation - GetActorLocation()).GetSafeNormal();
         TargetRotation = Direction.Rotation();
@@ -336,5 +389,59 @@ void ABaseCharacter::LevelUP() {
         HealthBarWidget->UpdateHealthOnChange(Health, MaxHealth);
         HealthBarWidget->UpdateResourceOnChange(Ressource, MaxRessource);
         HealthBarWidget->UpdateLevel();
+    }
+}
+
+bool ABaseCharacter::NeedEnemyTarget(EAbilityInputID Ability) {
+    int AbilitySlot = GetAbilitySlot(Ability);
+    if(UAbilityBase** FoundAbility = InstantiatedAbilities.Find(AbilitySlot)) {
+        if(!(*FoundAbility)->CanRecast) {
+            return (*FoundAbility)->NeedEnemyTarget;
+        }
+        if((*FoundAbility)->CanRecast) {
+            return (*FoundAbility)->NeedEnemytargetRecast;
+        }
+    }
+
+    return false;
+}
+
+void ABaseCharacter::SetEnemyTarget(EAbilityInputID Ability, AActor* Target) {
+    int AbilitySlot = GetAbilitySlot(Ability);
+    if(UAbilityBase** FoundAbility = InstantiatedAbilities.Find(AbilitySlot)) {
+        if(ABaseCharacter* Character = Cast<ABaseCharacter>(Target)) {
+            (*FoundAbility)->EnemyTarget = Character;
+        }
+    }
+}
+
+bool ABaseCharacter::HasEnemyTarget(EAbilityInputID Ability) {
+    int AbilitySlot = GetAbilitySlot(Ability);
+    if(UAbilityBase** FoundAbility = InstantiatedAbilities.Find(AbilitySlot)) {
+        if((*FoundAbility)->EnemyTarget) return true;
+    }
+
+    return false;
+}
+
+void ABaseCharacter::UpdateCursor() {
+    APlayerController_Mechanics* PlayerController = Cast<APlayerController_Mechanics>(GetController());
+    if(!PlayerController) return;
+    
+    if(IsInAbilityTargeting()) {
+        int AbilitySlot = GetAbilitySlot(ActiveAbilityInputID);
+        if(UAbilityBase** FoundAbility = InstantiatedAbilities.Find(AbilitySlot)) {
+            FHitResult Hit;
+            PlayerController->GetHitResultUnderCursor(ECC_Visibility, true, Hit);
+
+            if(Hit.bBlockingHit && Cast<ABaseCharacter>(Hit.GetActor())) {
+                PlayerController->SetMouseCursorWidget(EMouseCursor::Default, PlayerController->TargetingEnemyCursorBrush);
+                return;
+            }
+        }
+
+        PlayerController->SetMouseCursorWidget(EMouseCursor::Default, PlayerController->TargetingCursorBrush);
+    }else {
+        PlayerController->SetMouseCursorWidget(EMouseCursor::Default, PlayerController->DefaultCursorBrush);
     }
 }

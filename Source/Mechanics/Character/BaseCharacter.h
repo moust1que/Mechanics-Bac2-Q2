@@ -132,6 +132,10 @@ class MECHANICS_API ABaseCharacter : public ACharacter {
         bool ShouldRotate = false;
         float RotationSpeed = 10.0f;
 
+        AActor* PendingAbilityTarget = nullptr;
+        EAbilityInputID PendingAbilityInputID = EAbilityInputID::None;
+        bool IsApproachingTarget = false;
+
         UFUNCTION() void OnSetDestinationStarted();
         UFUNCTION() void OnSetDestinationTriggered();
         UFUNCTION() void OnSetDestinationReleased();
@@ -146,4 +150,10 @@ class MECHANICS_API ABaseCharacter : public ACharacter {
 
         bool CanUseAbility(EAbilityInputID Ability);
         int GetAbilitySlot(EAbilityInputID Ability) const;
+
+        bool NeedEnemyTarget(EAbilityInputID Ability);
+        void SetEnemyTarget(EAbilityInputID Ability, AActor* Target);
+        bool HasEnemyTarget(EAbilityInputID Ability);
+
+        void UpdateCursor();
 };
