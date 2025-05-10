@@ -298,7 +298,7 @@ void ABaseCharacter::ExecuteAbility(EAbilityInputID Ability) {
     APlayerController* PlayerController = Cast<APlayerController>(GetController());
     FHitResult Hit;
 
-    if(PlayerController->GetHitResultUnderCursor(ECC_Visibility, true, Hit)) {
+    if(PlayerController->GetHitResultUnderCursor(ECC_GameTraceChannel1, true, Hit)) {
         if(NeedEnemyTarget(Ability) && !HasEnemyTarget(Ability)) {
             SetEnemyTarget(Ability, Hit.GetActor());
             IsUsingAbility = false;
@@ -438,12 +438,17 @@ void ABaseCharacter::UpdateCursor() {
 
             if(Hit.bBlockingHit && Cast<ABaseCharacter>(Hit.GetActor()) && (*FoundAbility)->NeedEnemyTarget) {
                 PlayerController->SetMouseCursorWidget(EMouseCursor::Default, PlayerController->TargetingEnemyCursorBrush);
-                return;
+                // return;
+            }else {
+                PlayerController->SetMouseCursorWidget(EMouseCursor::Default, PlayerController->TargetingCursorBrush);
             }
         }
-
-        PlayerController->SetMouseCursorWidget(EMouseCursor::Default, PlayerController->TargetingCursorBrush);
     }else {
         PlayerController->SetMouseCursorWidget(EMouseCursor::Default, PlayerController->DefaultCursorBrush);
     }
+
+    FVector2D CurrentMousePosition;
+    PlayerController->GetMousePosition(CurrentMousePosition.X, CurrentMousePosition.Y);
+    PlayerController->SetMouseLocation(CurrentMousePosition.X + 1, CurrentMousePosition.Y);
+    PlayerController->SetMouseLocation(CurrentMousePosition.X, CurrentMousePosition.Y);
 }

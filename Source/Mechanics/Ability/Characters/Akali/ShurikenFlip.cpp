@@ -141,9 +141,9 @@ void UShurikenFlip::PerformRecast() {
         UCapsuleComponent* MyCapsuleComponent = CurCharacter->GetCapsuleComponent();
 
         if(TargetCapsuleComponent && MyCapsuleComponent) {
-            float CombinedRadius = TargetCapsuleComponent->GetScaledCapsuleRadius() + MyCapsuleComponent->GetScaledCapsuleRadius();
+            // float CombinedRadius = TargetCapsuleComponent->GetScaledCapsuleRadius() + MyCapsuleComponent->GetScaledCapsuleRadius();
             FVector Direction = (RecastTarget->GetActorLocation() - CurCharacter->GetActorLocation()).GetSafeNormal();
-            DashTarget = RecastTarget->GetActorLocation() - Direction * CombinedRadius;
+            DashTarget = RecastTarget->GetActorLocation() - Direction * 8.0f;;
         }else {
             DashTarget = RecastLocation;
         }
