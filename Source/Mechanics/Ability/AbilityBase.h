@@ -52,9 +52,9 @@ class MECHANICS_API UAbilityBase : public UObject {
 
         virtual void ActivateAbility() {};
         UFUNCTION(BlueprintCallable) virtual void UpdateStats() {};
-        /*virtual */void StartCooldown(float CooldowToUse)/* {}*/;
-        UFUNCTION(BlueprintCallable, Category = Ability)/* virtual*/ void ResetCooldown()/* {}*/;
+        void StartCooldown(float CooldowToUse, bool IsSkipable = false);
+        UFUNCTION(BlueprintCallable, Category = Ability) void ResetCooldown();
         UFUNCTION(BlueprintCallable) virtual TArray<float> GetArguments() {return {Arg1, Arg2, Arg3};};
-        /*virtual */void StartCastTimer(float CastDuration, FName FunctionName)/* {}*/;
+        void StartCastTimer(float CastDuration, FName FunctionName);
         virtual void LaunchAttack() {};
 };

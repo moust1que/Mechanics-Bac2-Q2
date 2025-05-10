@@ -9,8 +9,8 @@ void UAbilityBase::StartCastTimer(float CastDuration, FName FunctionName) {
     CurCharacter->GetWorld()->GetTimerManager().SetTimer(CastTimerHandle, TimerDel, CastDuration, false);
 }
 
-void UAbilityBase::StartCooldown(float CooldownToUse) {
-    if(CurCharacter->AutoRefreshCooldowns) {
+void UAbilityBase::StartCooldown(float CooldownToUse, bool IsSkipable) {
+    if(CurCharacter->AutoRefreshCooldowns && IsSkipable) {
         IsOnCooldown = false;
         CurCharacter->GetWorld()->GetTimerManager().ClearTimer(CooldownTimer);
         CurCharacter->HUDWidget->ResetCooldown(this);

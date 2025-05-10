@@ -15,6 +15,9 @@ class MECHANICS_API URocketGrab : public UAbilityBase {
         UFUNCTION() void ActivateAbility() override;
         void UpdateStats() override;
         TArray<float> GetArguments() override;
+        UFUNCTION() void LaunchAttack() override;
+
+        UFUNCTION() void OnGrappleHit(AActor* HitActor, FVector HitLocation);
 
         UPROPERTY() ABlitzcrank* BlitzcrankCharacter = nullptr;
 };

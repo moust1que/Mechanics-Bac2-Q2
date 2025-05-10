@@ -1,1 +1,47 @@
 #include "RocketGrabIndicator.h"
+#include "Components/StaticMeshComponent.h"
+#include "Kismet/KismetMathLibrary.h"
+
+ARocketGrabIndicator::ARocketGrabIndicator() {
+    PrimaryActorTick.bCanEverTick = true;
+    
+    RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
+    
+    ArrowBaseMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ArrowBaseMesh"));
+    ArrowBaseMesh->SetupAttachment(RootComponent);
+    ArrowBaseMesh->SetRelativeRotation(FRotator(90.0f, 0.0f, 0.0f));
+    
+    ArrowTipMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ArrowTipMesh"));
+    ArrowTipMesh->SetupAttachment(RootComponent);
+    ArrowTipMesh->SetRelativeRotation(FRotator(90.0f, 0.0f, 0.0f));
+}
+
+void ARocketGrabIndicator::UpdateIndicatorDirection(const FVector& Direction) {
+    SetAttackRange(1115.0f);
+    
+    FVector Forward = Direction.GetSafeNormal();
+
+    FRotator LookAtRotation = UKismetMathLibrary::MakeRotFromX(Forward);
+
+    FRotator RotationOffset(0.0f, 90.0f, 0.0f);
+
+    float RecenterBaseOffset = 41.0f;
+    FVector BaseOffset = Forward * RecenterBaseOffset;
+    float RecenterTipOffset = 75.0f;
+    FVector TipOffset = Forward * RecenterTipOffset;
+
+    FVector BaseLocation = Forward * (AttackRange * 0.5f) - BaseOffset;
+    FVector TipLocation = Forward * AttackRange - TipOffset;
+
+    ArrowBaseMesh->SetRelativeScale3D(FVector(1.4f, 9.48f, 1.0f));
+    ArrowBaseMesh->SetRelativeRotation(LookAtRotation + RotationOffset);
+    ArrowBaseMesh->SetRelativeLocation(BaseLocation);
+
+    ArrowTipMesh->SetRelativeScale3D(FVector(1.4f, 1.0f, 1.0f));
+    ArrowTipMesh->SetRelativeRotation(LookAtRotation + RotationOffset);
+    ArrowTipMesh->SetRelativeLocation(TipLocation);
+}
+
+void ARocketGrabIndicator::SetAttackRange(float Range) {
+    AttackRange = Range;
+}

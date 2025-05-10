@@ -44,6 +44,7 @@ void UShurikenFlip::ActivateAbility() {
 
 void UShurikenFlip::LaunchAttack() {
     CurCharacter->IsUsingAbility = false;
+    CurCharacter->OnAbilityOverlayHideRequested();
     CurCharacter->Ressource -= RessourceCost;
     CurCharacter->HUDWidget->UpdateResourceOnChange();
     CurCharacter->HealthBarWidget->UpdateResourceOnChange(CurCharacter->Ressource, CurCharacter->MaxRessource);
@@ -65,14 +66,14 @@ void UShurikenFlip::LaunchAttack() {
     FActorSpawnParameters SpawnParams;
     SpawnParams.Owner = CurCharacter;
 
-    AShurikenProjectile* Projectile = CurCharacter->GetWorld()->SpawnActor<AShurikenProjectile>(Cast<AAkali>(CurCharacter)->ShurikenProjectileClass, SpawnLocation, SpawnRotation, SpawnParams);
+    AShurikenProjectile* Projectile = CurCharacter->GetWorld()->SpawnActor<AShurikenProjectile>(AkaliCharacter->ShurikenProjectileClass, SpawnLocation, SpawnRotation, SpawnParams);
 
     if(Projectile) {
         Projectile->OnShurikenHit.BindUObject(this, &UShurikenFlip::OnShurikenHit);
         Projectile->OnShurikenNoHit.BindUObject(this, &UShurikenFlip::OnShurikenMiss);
     }
     
-    StartCooldown(Cooldown);
+    StartCooldown(Cooldown, false);
 }
 
 void UShurikenFlip::HandleDashTick() {
@@ -122,11 +123,12 @@ void UShurikenFlip::OnShurikenHit(AActor* HitActor, FVector HitLocation) {
 void UShurikenFlip::OnShurikenMiss() {
     ResetCooldown();
 
-    StartCooldown(Cooldown);
+    StartCooldown(Cooldown, true);
 }
 
 void UShurikenFlip::PerformRecast() {
     CurCharacter->IsUsingAbility = false;
+    CurCharacter->OnAbilityOverlayHideRequested();
     CurCharacter->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
     CanRecast = false;
@@ -159,7 +161,7 @@ void UShurikenFlip::PerformRecast() {
 
     CurCharacter->GetWorld()->GetTimerManager().SetTimer(RecastDashTimerHandle, this, &UShurikenFlip::HandleRecastDashTick, 0.01f, true);
 
-    StartCooldown(Cooldown);
+    StartCooldown(Cooldown, true);
 }
 
 void UShurikenFlip::HandleRecastDashTick() {
@@ -188,7 +190,7 @@ void UShurikenFlip::CancelRecast() {
     CanRecast = false;
     CurCharacter->HUDWidget->UpdateSpellRecastDisplay(this);
 
-    StartCooldown(Cooldown);
+    StartCooldown(Cooldown, true);
 }
 
 TArray<float> UShurikenFlip::GetArguments() {

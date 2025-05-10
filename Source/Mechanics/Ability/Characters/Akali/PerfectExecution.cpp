@@ -39,6 +39,7 @@ void UPerfectExecution::ActivateAbility() {
     if(Level == 0 || IsOnCooldown) return;
 
     CurCharacter->IsUsingAbility = false;
+    CurCharacter->OnAbilityOverlayHideRequested();
     DamagedEnemies.Empty();
 
     if(CanRecast) {
@@ -62,7 +63,7 @@ void UPerfectExecution::ActivateAbility() {
     CurCharacter->GetWorld()->GetTimerManager().SetTimer(DashTimerHandle, this, &UPerfectExecution::HandleDashTick, 0.01f, true);
 
     FTimerHandle RecastEnableTimerHandle;
-    StartCooldown(2.5f);
+    StartCooldown(2.5f, false);
     CurCharacter->GetWorld()->GetTimerManager().SetTimer(
         RecastEnableTimerHandle,
         [this]() {
@@ -156,7 +157,7 @@ void UPerfectExecution::PerformRecast() {
     CurCharacter->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     CurCharacter->GetWorld()->GetTimerManager().SetTimer(RecastTimerHandle, this, &UPerfectExecution::HandleRecastDashTick, 0.01f, true);
 
-    StartCooldown(Cooldown);
+    StartCooldown(Cooldown, true);
 }
 
 void UPerfectExecution::HandleRecastDashTick() {
@@ -209,7 +210,7 @@ void UPerfectExecution::CancelRecast() {
     CanRecast = false;
     NeedEnemyTarget = true;  
     CurCharacter->HUDWidget->UpdateSpellRecastDisplay(this);
-    StartCooldown(Cooldown);
+    StartCooldown(Cooldown, true);
 }
 
 TArray<float> UPerfectExecution::GetArguments() {

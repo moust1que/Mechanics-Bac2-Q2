@@ -107,6 +107,8 @@ void ABaseCharacter::HandleFunctionCall(FName functionName, const FInputActionIn
 }
 
 void ABaseCharacter::OnSetDestinationStarted() {
+    if(!CanMove) return;
+
     WasCancellingAbility = false;
 
     if(IsInAbilityTargeting()) {
@@ -126,7 +128,7 @@ void ABaseCharacter::OnSetDestinationStarted() {
 }
 
 void ABaseCharacter::OnSetDestinationTriggered() {
-    if(WasCancellingAbility || IsInAbilityTargeting()) return;
+    if(WasCancellingAbility || IsInAbilityTargeting() || !CanMove) return;
 
     FollowTime += GetWorld()->GetDeltaSeconds();
 
@@ -155,7 +157,7 @@ void ABaseCharacter::OnSetDestinationReleased() {
         return;
     }
 
-    if(IsInAbilityTargeting()) return;
+    if(IsInAbilityTargeting() || !CanMove) return;
 
     if(FollowTime <= ShortPressThreshold) {
         APlayerController* PlayerController = Cast<APlayerController>(GetController());
@@ -434,7 +436,7 @@ void ABaseCharacter::UpdateCursor() {
             FHitResult Hit;
             PlayerController->GetHitResultUnderCursor(ECC_Visibility, true, Hit);
 
-            if(Hit.bBlockingHit && Cast<ABaseCharacter>(Hit.GetActor())) {
+            if(Hit.bBlockingHit && Cast<ABaseCharacter>(Hit.GetActor()) && (*FoundAbility)->NeedEnemyTarget) {
                 PlayerController->SetMouseCursorWidget(EMouseCursor::Default, PlayerController->TargetingEnemyCursorBrush);
                 return;
             }

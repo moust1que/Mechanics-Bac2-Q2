@@ -112,6 +112,10 @@ class MECHANICS_API ABaseCharacter : public ACharacter {
         void LaunchRegen();
         void HandleRegen();
 
+        void OnAbilityOverlayHideRequested();
+
+        bool CanMove = true;
+
     protected:
         virtual void BeginPlay() override;
 
@@ -144,7 +148,6 @@ class MECHANICS_API ABaseCharacter : public ACharacter {
         UFUNCTION() void ActivateAttackMode(EAbilityInputID Ability);
         UFUNCTION() void OnAbilityOverlayRequested(EAbilityInputID Ability);
         UFUNCTION() void ExecuteAbility(EAbilityInputID Ability);
-        UFUNCTION() void OnAbilityOverlayHideRequested();
         
         virtual void UpdateStats() {};
 

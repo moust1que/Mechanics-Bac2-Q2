@@ -35,7 +35,7 @@ void APerfectExecutionRecastIndicator::UpdateIndicatorDirection(const FVector& D
 
     float Distance = FVector::Dist(BaseLocation, TipLocation);
 
-    ArrowBaseMesh->SetRelativeScale3D(FVector(1.1f, 6.032f, 1.0f));
+    ArrowBaseMesh->SetRelativeScale3D(FVector(1.1f, 6.35f, 1.0f));
     ArrowBaseMesh->SetRelativeRotation(LookAtRotation + RotationOffset);
     ArrowBaseMesh->SetRelativeLocation(BaseLocation);
 

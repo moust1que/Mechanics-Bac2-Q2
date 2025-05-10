@@ -1,6 +1,6 @@
 #include "ShurikenProjectile.h"
 #include "Components/SphereComponent.h"
-#include "Components/StaticMeshComponent.h"
+// #include "Components/StaticMeshComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "../../../Character/BaseCharacter.h"
 
@@ -69,7 +69,7 @@ void AShurikenProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* Other
         if(OnShurikenHit.IsBound()) {
             OnShurikenHit.Execute(OtherActor, Hit.ImpactPoint);
         }
-        Destroy();
+        DestroyProjectile();
     }
 }
 
