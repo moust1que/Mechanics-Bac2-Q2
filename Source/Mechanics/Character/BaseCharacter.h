@@ -96,6 +96,8 @@ class MECHANICS_API ABaseCharacter : public ACharacter {
 
         bool IsUsingAbility = false;
 
+        UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Flag) bool HoverButton = false;
+
         UFUNCTION(BlueprintCallable, Category = Ability) void Ability1();
         UFUNCTION(BlueprintCallable, Category = Ability) void Ability2();
         UFUNCTION(BlueprintCallable, Category = Ability) void Ability3();
@@ -156,6 +158,7 @@ class MECHANICS_API ABaseCharacter : public ACharacter {
 
         bool NeedEnemyTarget(EAbilityInputID Ability);
         void SetEnemyTarget(EAbilityInputID Ability, AActor* Target);
+        void ClearEnemyTarget(EAbilityInputID Ability);
         bool HasEnemyTarget(EAbilityInputID Ability);
 
         void UpdateCursor();

@@ -210,6 +210,8 @@ void UPerfectExecution::CancelRecast() {
     CanRecast = false;
     NeedEnemyTarget = true;  
     CurCharacter->HUDWidget->UpdateSpellRecastDisplay(this);
+    CurCharacter->CancelAttack();
+
     StartCooldown(Cooldown, true);
 }
 

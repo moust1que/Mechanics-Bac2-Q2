@@ -43,7 +43,6 @@ void UShurikenFlip::ActivateAbility() {
 }
 
 void UShurikenFlip::LaunchAttack() {
-    CurCharacter->IsUsingAbility = false;
     CurCharacter->OnAbilityOverlayHideRequested();
     CurCharacter->Ressource -= RessourceCost;
     CurCharacter->HUDWidget->UpdateResourceOnChange();
@@ -72,6 +71,8 @@ void UShurikenFlip::LaunchAttack() {
         Projectile->OnShurikenHit.BindUObject(this, &UShurikenFlip::OnShurikenHit);
         Projectile->OnShurikenNoHit.BindUObject(this, &UShurikenFlip::OnShurikenMiss);
     }
+
+    CurCharacter->IsUsingAbility = false;
     
     StartCooldown(Cooldown, false);
 }
@@ -102,6 +103,7 @@ void UShurikenFlip::HandleDashTick() {
     if(Alpha >= 1.0f) {
         CurCharacter->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
         GetWorld()->GetTimerManager().ClearTimer(DashTimerHandle);
+        CurCharacter->IsUsingAbility = false;
     }
 }
 
@@ -127,7 +129,6 @@ void UShurikenFlip::OnShurikenMiss() {
 }
 
 void UShurikenFlip::PerformRecast() {
-    CurCharacter->IsUsingAbility = false;
     CurCharacter->OnAbilityOverlayHideRequested();
     CurCharacter->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
@@ -141,7 +142,6 @@ void UShurikenFlip::PerformRecast() {
         UCapsuleComponent* MyCapsuleComponent = CurCharacter->GetCapsuleComponent();
 
         if(TargetCapsuleComponent && MyCapsuleComponent) {
-            // float CombinedRadius = TargetCapsuleComponent->GetScaledCapsuleRadius() + MyCapsuleComponent->GetScaledCapsuleRadius();
             FVector Direction = (RecastTarget->GetActorLocation() - CurCharacter->GetActorLocation()).GetSafeNormal();
             DashTarget = RecastTarget->GetActorLocation() - Direction * 8.0f;;
         }else {
@@ -160,6 +160,8 @@ void UShurikenFlip::PerformRecast() {
     RecastDashDuration = Distance / DashSpeed;
 
     CurCharacter->GetWorld()->GetTimerManager().SetTimer(RecastDashTimerHandle, this, &UShurikenFlip::HandleRecastDashTick, 0.01f, true);
+
+    CurCharacter->IsUsingAbility = false;
 
     StartCooldown(Cooldown, true);
 }
@@ -183,12 +185,15 @@ void UShurikenFlip::HandleRecastDashTick() {
         if(HitCharacter) {
             HitCharacter->ReceiveDamage(RecastTotalDamage);
         }
+        CurCharacter->IsUsingAbility = false;
     }
 }
 
 void UShurikenFlip::CancelRecast() {
+    CurCharacter->IsUsingAbility = false;
     CanRecast = false;
     CurCharacter->HUDWidget->UpdateSpellRecastDisplay(this);
+    CurCharacter->CancelAttack();
 
     StartCooldown(Cooldown, true);
 }

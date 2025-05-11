@@ -113,12 +113,14 @@ void ABaseCharacter::OnSetDestinationStarted() {
 
     if(IsInAbilityTargeting()) {
         CancelAttack();
+        IsUsingAbility = false;
         WasCancellingAbility = true;
         return;
     }
 
     if(IsApproachingTarget) {
         PendingAbilityTarget = nullptr;
+        ClearEnemyTarget(PendingAbilityInputID);
         PendingAbilityInputID = EAbilityInputID::None;
         IsApproachingTarget = false;
         CancelAttack();
@@ -281,7 +283,7 @@ void ABaseCharacter::OnAbilityOverlayRequested(EAbilityInputID Ability) {
             FRotator SpawnRotation = GetActorRotation();
 
             CurrentTargetIndicator = GetWorld()->SpawnActor<AAbilityTargetingIndicator>(IndicatorToSpawn, SpawnLocation, SpawnRotation, SpawnParameters);
-        }else {
+        }else if(!HoverButton){
             ConfirmAttack();
         }
     }
@@ -291,43 +293,40 @@ void ABaseCharacter::OnAbilityOverlayHideRequested() {
     if(CurrentTargetIndicator) {
         CurrentTargetIndicator->Destroy();
         CurrentTargetIndicator = nullptr;
+        HoverButton = false;
     }
 }
 
 void ABaseCharacter::ExecuteAbility(EAbilityInputID Ability) {
     APlayerController* PlayerController = Cast<APlayerController>(GetController());
-    FHitResult Hit;
+    FHitResult HitLocation;
+    FHitResult HitTarget;
 
-    if(PlayerController->GetHitResultUnderCursor(ECC_GameTraceChannel1, true, Hit)) {
+    if(PlayerController->GetHitResultUnderCursor(ECC_GameTraceChannel1, true, HitLocation) && PlayerController->GetHitResultUnderCursor(ECC_Visibility, true, HitTarget)) {
         if(NeedEnemyTarget(Ability) && !HasEnemyTarget(Ability)) {
-            FHitResult HitTarget;
-            if(PlayerController->GetHitResultUnderCursor(ECC_Visibility, true, HitTarget)) {
-                SetEnemyTarget(Ability, HitTarget.GetActor());
-                IsUsingAbility = false;
-                if(!HasEnemyTarget(Ability)) return;
+            SetEnemyTarget(Ability, HitTarget.GetActor());
+            IsUsingAbility = false;
+            if(!HasEnemyTarget(Ability)) return;
 
-                UE_LOG(LogTemp, Warning, TEXT("Has enemy target"));
+            float Distance = FVector::Dist(GetActorLocation(), HitTarget.GetActor()->GetActorLocation());
+            int AbilitySlot = GetAbilitySlot(Ability);
 
-                float Distance = FVector::Dist(GetActorLocation(), HitTarget.GetActor()->GetActorLocation());
-                int AbilitySlot = GetAbilitySlot(Ability);
+            if(UAbilityBase** FoundAbility = InstantiatedAbilities.Find(AbilitySlot)) {
+                float AbilityRange = (*FoundAbility)->AbilityRange;
 
-                if(UAbilityBase** FoundAbility = InstantiatedAbilities.Find(AbilitySlot)) {
-                    float AbilityRange = (*FoundAbility)->AbilityRange;
+                if(Distance > AbilityRange) {
+                    PendingAbilityTarget = HitTarget.GetActor();
+                    PendingAbilityInputID = Ability;
+                    IsApproachingTarget = true;
+                    IsUsingAbility = false;
 
-                    if(Distance > AbilityRange) {
-                        PendingAbilityTarget = Hit.GetActor();
-                        PendingAbilityInputID = Ability;
-                        IsApproachingTarget = true;
-                        IsUsingAbility = false;
-
-                        UAIBlueprintHelperLibrary::SimpleMoveToActor(PlayerController, PendingAbilityTarget);
-                        return;
-                    }
+                    UAIBlueprintHelperLibrary::SimpleMoveToActor(PlayerController, PendingAbilityTarget);
+                    return;
                 }
             }
         }
         
-        FVector TargetLocation = Hit.Location;
+        FVector TargetLocation = HitLocation.Location;
         FVector Direction = (TargetLocation - GetActorLocation()).GetSafeNormal();
         TargetRotation = Direction.Rotation();
         TargetRotation.Pitch = 0.0f;
@@ -419,6 +418,13 @@ void ABaseCharacter::SetEnemyTarget(EAbilityInputID Ability, AActor* Target) {
         if(ABaseCharacter* Character = Cast<ABaseCharacter>(Target)) {
             (*FoundAbility)->EnemyTarget = Character;
         }
+    }
+}
+
+void ABaseCharacter::ClearEnemyTarget(EAbilityInputID Ability) {
+    int AbilitySlot = GetAbilitySlot(Ability);
+    if(UAbilityBase** FoundAbility = InstantiatedAbilities.Find(AbilitySlot)) {
+        (*FoundAbility)->EnemyTarget = nullptr;
     }
 }
 
