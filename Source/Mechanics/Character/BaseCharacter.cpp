@@ -300,24 +300,29 @@ void ABaseCharacter::ExecuteAbility(EAbilityInputID Ability) {
 
     if(PlayerController->GetHitResultUnderCursor(ECC_GameTraceChannel1, true, Hit)) {
         if(NeedEnemyTarget(Ability) && !HasEnemyTarget(Ability)) {
-            SetEnemyTarget(Ability, Hit.GetActor());
-            IsUsingAbility = false;
-            if(!HasEnemyTarget(Ability)) return;
+            FHitResult HitTarget;
+            if(PlayerController->GetHitResultUnderCursor(ECC_Visibility, true, HitTarget)) {
+                SetEnemyTarget(Ability, HitTarget.GetActor());
+                IsUsingAbility = false;
+                if(!HasEnemyTarget(Ability)) return;
 
-            float Distance = FVector::Dist(GetActorLocation(), Hit.GetActor()->GetActorLocation());
-            int AbilitySlot = GetAbilitySlot(Ability);
+                UE_LOG(LogTemp, Warning, TEXT("Has enemy target"));
 
-            if(UAbilityBase** FoundAbility = InstantiatedAbilities.Find(AbilitySlot)) {
-                float AbilityRange = (*FoundAbility)->AbilityRange;
+                float Distance = FVector::Dist(GetActorLocation(), HitTarget.GetActor()->GetActorLocation());
+                int AbilitySlot = GetAbilitySlot(Ability);
 
-                if(Distance > AbilityRange) {
-                    PendingAbilityTarget = Hit.GetActor();
-                    PendingAbilityInputID = Ability;
-                    IsApproachingTarget = true;
-                    IsUsingAbility = false;
+                if(UAbilityBase** FoundAbility = InstantiatedAbilities.Find(AbilitySlot)) {
+                    float AbilityRange = (*FoundAbility)->AbilityRange;
 
-                    UAIBlueprintHelperLibrary::SimpleMoveToActor(PlayerController, PendingAbilityTarget);
-                    return;
+                    if(Distance > AbilityRange) {
+                        PendingAbilityTarget = Hit.GetActor();
+                        PendingAbilityInputID = Ability;
+                        IsApproachingTarget = true;
+                        IsUsingAbility = false;
+
+                        UAIBlueprintHelperLibrary::SimpleMoveToActor(PlayerController, PendingAbilityTarget);
+                        return;
+                    }
                 }
             }
         }
