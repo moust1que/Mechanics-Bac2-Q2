@@ -14,10 +14,12 @@ class UCameraComponent;
 class UNiagaraSystem;
 class AAbilityTargetingIndicator;
 
+// Ability input enum for mapping inputs to abilities
 UENUM(BlueprintType) enum class EAbilityInputID : uint8 {
     None, A, Z, E, R
 };
 
+// Struct holding ability indicator actor classes for first and second cast visuals
 USTRUCT(BlueprintType) struct FAbiliyIndicatorSet {
     GENERATED_BODY()
 
@@ -32,27 +34,35 @@ class MECHANICS_API ABaseCharacter : public ACharacter {
     public:
         ABaseCharacter();
 
+        // Mapping from ability slot index to ability class
         UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Abilities) TMap<int, TSubclassOf<UAbilityBase>> AbilityMap;
 
+        // Instantiated ability objects per slot
         UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Abilities) TMap<int, UAbilityBase*> InstantiatedAbilities;
 
+        // Cursor effect particle system
         UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input) UNiagaraSystem* FXCursor;
 
         void HandleFunctionCall(FName functionName, const FInputActionInstance& Instance);
 
         void ActivateAbility(int AbilitySlot);
 
+        // Camera zoom settings
         UPROPERTY(EditAnywhere, Category = Camera) float CameraZoomSpeed = 100.0f;
         UPROPERTY(EditAnywhere, Category = Camera) float CameraZoomMin = 1200.0f;
         UPROPERTY(EditAnywhere, Category = Camera) float CameraZoomMax = 2500.0f;
 
+        // Widgets for UI display
         UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Widget) UMainHUD* HUDWidget;
         UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Widget) UHealthBar* HealthBarWidget;
 
+        // If true, cooldowns will auto-refresh
         UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Cooldowns) bool AutoRefreshCooldowns = false;
 
+        // Is this character an enemy? Used for targeting logic
         UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Character) bool IsEnemy = false;
 
+        // Type of resource used
         ERessourceType RessourceType;
 
         // Stats
@@ -90,10 +100,13 @@ class MECHANICS_API ABaseCharacter : public ACharacter {
         UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Stats) float RessourceRegen;
         UPROPERTY(EditAnywhere, Category = Stats) float RessourceRegenPerLevel;
 
+        // Ability indicators to show in world for targeting cues
         UPROPERTY(EditAnywhere, Category = Indicators) TMap<EAbilityInputID, FAbiliyIndicatorSet> AbilityIndicators;
 
+        // Current active targeting indicator in the world
         UPROPERTY() AAbilityTargetingIndicator* CurrentTargetIndicator = nullptr;
 
+        // Flags for ability and UI state
         bool IsUsingAbility = false;
 
         UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Flag) bool HoverButton = false;
@@ -116,28 +129,35 @@ class MECHANICS_API ABaseCharacter : public ACharacter {
 
         void OnAbilityOverlayHideRequested();
 
+        // Controls if character can move
         bool CanMove = true;
 
     protected:
         virtual void BeginPlay() override;
 
     private:
+        // Components for camera control
         USpringArmComponent* SpringArmComponent;
         UCameraComponent* CameraComponent;
 
+        // Currently active ability input
         EAbilityInputID ActiveAbilityInputID = EAbilityInputID::None;
 
+        // Cached movement destination
         FVector CachedDestination;
 
         bool WasCancellingAbility = false;
 
+        // Used to measure input press duration for input logic
         float ShortPressThreshold = 0.3f;
         float FollowTime;
 
+        // Rotation target and flags for smooth rotation on movement/aim
         FRotator TargetRotation;
         bool ShouldRotate = false;
         float RotationSpeed = 10.0f;
 
+        // Target actor for abilities that require moving towards a target before use
         AActor* PendingAbilityTarget = nullptr;
         EAbilityInputID PendingAbilityInputID = EAbilityInputID::None;
         bool IsApproachingTarget = false;

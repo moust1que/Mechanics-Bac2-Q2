@@ -13,21 +13,27 @@ class MECHANICS_API UAbilityBase : public UObject {
 	GENERATED_BODY()
 
     public:
+        // The character currently using the ability
         UPROPERTY(EditAnywhere, Category = Ability) ABaseCharacter* CurCharacter;
 
+        // General ability stats
         UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Ability) int Level;
         UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Ability) int AbilityID;
         UPROPERTY(EditAnywhere, Category = Ability) int MaxLevel;
+        // Cooldown management
         UPROPERTY(EditAnywhere, Category = Ability) float BaseCooldown;
         UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Ability) float Cooldown;
         UPROPERTY(EditAnywhere, Category = Ability) bool IsOnCooldown = false;
+        // Ressource cost
         UPROPERTY(EditAnywhere, Category = Ability) float BaseRessourceCost;
         UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Ability) float RessourceCost;
+        // Damage
         UPROPERTY(EditAnywhere, Category = Ability) float BaseDamage;
         UPROPERTY(EditAnywhere, Category = Ability) float AbilityDamage;
         UPROPERTY(EditAnywhere, Category = Ability) float AbilityPower;
         UPROPERTY(EditAnywhere, Category = Ability) float TotalDamage;
 
+        // Recast mechanics
         UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Ability) bool CanRecast = false;
         UPROPERTY(EditAnywhere, Category = Ability) float BaseRecastCooldown;
         UPROPERTY(EditAnywhere, Category = Ability) float BaseRecastRessourceCost;
@@ -36,18 +42,23 @@ class MECHANICS_API UAbilityBase : public UObject {
         UPROPERTY(EditAnywhere, Category = Ability) float RecastAbilityPower;
         UPROPERTY(EditAnywhere, Category = Ability) float RecastTotalDamage;
 
+        // Additional arguments for the tooltips
         UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Arguments) float Arg1;
         UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Arguments) float Arg2;
         UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Arguments) float Arg3;
 
+        // Cooldown timer handle
         FTimerHandle CooldownTimer;
 
+        // Ability usability flags
         bool CanBeUsed = true;
         bool NeedEnemyTarget = false;
         bool NeedEnemytargetRecast = false;
 
+        // Current enemy target
         AActor* EnemyTarget = nullptr;
 
+        // Effective ability range
         float AbilityRange;
 
         virtual void ActivateAbility() {};

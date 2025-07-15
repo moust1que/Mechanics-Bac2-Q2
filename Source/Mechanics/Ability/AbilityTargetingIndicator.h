@@ -14,5 +14,6 @@ class MECHANICS_API AAbilityTargetingIndicator : public AActor {
         void ShowIndicator(bool Show);
 
     protected:
+        // Distance in Unreal units that the indicator should represent by default
         float AttackRange = 600.0f;
 };

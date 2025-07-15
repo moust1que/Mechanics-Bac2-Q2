@@ -3,6 +3,7 @@
 void ABlitzcrank::BeginPlay() {
     Super::BeginPlay();
 
+    // Initialize base stats and starting values at level 1
     Level = 1;
     BaseHealth = 600.0f;
     Health = BaseHealth;
@@ -26,16 +27,20 @@ void ABlitzcrank::BeginPlay() {
     HealthRegenPerLevel = 0.75f;
     BaseRessourceRegen = 8.5f;
     RessourceRegenPerLevel = 0.8f;
+    // Update all scaled stats based on current level
     UpdateStats();
 
+    // Set resource type to Mana and update HUD bar accordingly
     RessourceType = ERessourceType::Mana;
     if(HealthBarWidget) {
         HealthBarWidget->DisplayResourceBar(RessourceType);
     }
 
+    // Start passive health and resource regeneration
     Cast<ABaseCharacter>(this)->LaunchRegen();
 }
 
+// Called to update all scaled stats based on current level
 void ABlitzcrank::UpdateStats() {
     MaxHealth = BaseHealth + HealthPerLevel * (Level - 1);
     MaxRessource = BaseRessource + RessourcePerLevel * (Level - 1);
@@ -47,14 +52,3 @@ void ABlitzcrank::UpdateStats() {
     HealthRegen = BaseHealthRegen + HealthRegenPerLevel * (Level - 1);
     RessourceRegen = BaseRessourceRegen + RessourceRegenPerLevel * (Level - 1);
 }
-
-// void ABlitzcrank::LevelUP() {
-//     if(Level < MaxLevel) {
-//         Level++;
-//         Health += HealthPerLevel;
-//         Ressource += RessourcePerLevel;
-//         UpdateStats();
-//         HealthBarWidget->UpdateHealthOnChange(Health, MaxHealth);
-//         HealthBarWidget->UpdateResourceOnChange(Ressource, MaxRessource);
-//     }
-// }

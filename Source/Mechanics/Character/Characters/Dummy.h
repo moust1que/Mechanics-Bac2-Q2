@@ -13,7 +13,9 @@ class MECHANICS_API ADummy : public ABaseCharacter {
 
         void ReceiveDamage(float Damage) override;
 
+        // Timer handle for scheduling health regeneration
         FTimerHandle RegenTimerHandle;
+        // Delay before health regeneration begins after damage
         float RegenDelay = 3.0f;
 
     protected:

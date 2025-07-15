@@ -15,6 +15,8 @@ class MECHANICS_API APerfectExecutionRecastIndicator : public AAbilityTargetingI
         UFUNCTION() void SetAttackRange(float Range) override;
 
     protected:
+        // Mesh component representing the tip of the arrow
         UPROPERTY(VisibleAnywhere) UStaticMeshComponent* ArrowTipMesh;
+        // Mesh component representing the base of the arrow
         UPROPERTY(VisibleAnywhere) UStaticMeshComponent* ArrowBaseMesh;
 };

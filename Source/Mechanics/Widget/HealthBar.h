@@ -4,6 +4,7 @@
 #include "Blueprint/UserWidget.h"
 #include "HealthBar.generated.h"
 
+// Enum representing different resource types that the health bar widget can display
 UENUM(BlueprintType) enum class ERessourceType : uint8 {
     Mana, Energy, Timer
 };

@@ -3,6 +3,7 @@
 void AAkali::BeginPlay() {
     Super::BeginPlay();
 
+    // Character stats initialization
     Level = 1;
     BaseHealth = 600.0f;
     Health = BaseHealth;
@@ -26,16 +27,21 @@ void AAkali::BeginPlay() {
     HealthRegenPerLevel = 0.9f;
     BaseRessourceRegen = 50.0f;
     RessourceRegenPerLevel = 0.0f;
+    // Recalcul des stats avec le niveau actuel
     UpdateStats();
 
+    // Setup specific resource type for Akali
     RessourceType = ERessourceType::Energy;
+    // Display energy bar in HUD if the widget exists
     if(HealthBarWidget) {
         HealthBarWidget->DisplayResourceBar(RessourceType);
     }
 
+    // Start automatic regeneration
     Cast<ABaseCharacter>(this)->LaunchRegen();
 }
 
+// Called to update all scaled stats based on current level
 void AAkali::UpdateStats() {
     MaxHealth = BaseHealth + HealthPerLevel * (Level - 1);
     MaxRessource = BaseRessource + RessourcePerLevel * (Level - 1);
@@ -47,14 +53,3 @@ void AAkali::UpdateStats() {
     HealthRegen = BaseHealthRegen + HealthRegenPerLevel * (Level - 1);
     RessourceRegen = BaseRessourceRegen + RessourceRegenPerLevel * (Level - 1);
 }
-
-// void AAkali::LevelUP() {
-//     if(Level < MaxLevel) {
-//         Level++;
-//         Health += HealthPerLevel;
-//         Ressource += RessourcePerLevel;
-//         UpdateStats();
-//         HealthBarWidget->UpdateHealthOnChange(Health, MaxHealth);
-//         HealthBarWidget->UpdateResourceOnChange(Ressource, MaxRessource);
-//     }
-// }

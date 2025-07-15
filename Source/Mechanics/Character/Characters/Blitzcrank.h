@@ -12,6 +12,7 @@ class MECHANICS_API ABlitzcrank : public ABaseCharacter {
 	GENERATED_BODY()
 
     public:
+        // Class reference for the RocketGrab projectile used by Blitzcrank's ability
         UPROPERTY(EditAnywhere, Category = Abilities) TSubclassOf<ARocketGrabProjectile> RocketGrabProjectileClass;
 
     protected:

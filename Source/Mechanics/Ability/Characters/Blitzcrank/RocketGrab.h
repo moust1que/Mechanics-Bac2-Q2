@@ -19,5 +19,6 @@ class MECHANICS_API URocketGrab : public UAbilityBase {
 
         UFUNCTION() void OnGrappleHit(AActor* HitActor, FVector HitLocation);
 
+        // Reference to the Blitzcrank character casting this ability, for access to stats like AbilityPower
         UPROPERTY() ABlitzcrank* BlitzcrankCharacter = nullptr;
 };

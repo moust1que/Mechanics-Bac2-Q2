@@ -16,5 +16,6 @@ class MECHANICS_API UMainHUD : public UUserWidget {
         UFUNCTION(BlueprintImplementableEvent) void UpdateResourceOnChange();
         UFUNCTION(BlueprintImplementableEvent) void UpdateHealthOnChange();
 
+        // Tracks whether an ability has been clicked
         UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Ability) bool AbilityClicked = false;
 };

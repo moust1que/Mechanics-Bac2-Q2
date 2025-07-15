@@ -19,7 +19,9 @@ class MECHANICS_API AShurikenFlipIndicator : public AAbilityTargetingIndicator {
         UFUNCTION() void SetAttackRange(float Range) override;
 
     protected:
+    // Visual component displaying the ground range decal of the ability
         UPROPERTY(VisibleAnywhere) UDecalComponent* RangeDecal;
+        // Mesh components representing the back arrow and front arrow parts of the indicator
         UPROPERTY(VisibleAnywhere) UStaticMeshComponent* BackArrowMesh;
         UPROPERTY(VisibleAnywhere) UStaticMeshComponent* FrontArrowMesh;
         UPROPERTY(VisibleAnywhere) UStaticMeshComponent* FrontArrowTipMesh;
