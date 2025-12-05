@@ -7,7 +7,7 @@
 
 ## Français 🇫🇷
 
-> Reproduction de 3 mécaniques de Gameplay développés en C++ et Blueprint avec Unreal Engine 5 dans le cadre du cours de Programmation (Bac2 Q2) à la Haute École Albert Jacquard.
+> Reproduction de 3 mécaniques de gameplay développés en C++ et Blueprint avec Unreal Engine 5 dans le cadre du cours de Programmation (Bac2 Q2) à la Haute École Albert Jacquard.
 
 --- 
 
@@ -74,7 +74,7 @@ Ce projet est un travail académique. Aucune licence open source officielle ne s
 
 ## English 🇬🇧
 
-> Reproduction of 3 gamplay mechanics developed in C++ and Blueprint with Unreal Engine 5 as part of the Programming course (Bac2 Q2) at Haute École Albert Jacquard college.
+> Reproduction of 3 gameplay mechanics developed in C++ and Blueprint with Unreal Engine 5 as part of the Programming course (Bac2 Q2) at Haute École Albert Jacquard college.
 
 ---
 
